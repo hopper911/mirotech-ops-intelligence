@@ -1,15 +1,22 @@
 import { mockOpsSource } from "./mock-source";
 import type { OpsSource } from "./types";
 
-/** Swap this for a live connector when sources are ready. */
 export const opsSource: OpsSource = mockOpsSource;
+export { SAMPLE_DATA_LABEL } from "./mock-source";
 
 export type {
-  OpsDashboard,
-  OpsInsight,
-  OpsKpi,
-  OpsModuleId,
-  OpsModuleSummary,
-  OpsSeriesPoint,
+  AiModelUsage,
+  AssistantPreset,
+  AssistantSource,
+  AssistantTurn,
+  AutomationJob,
+  ExecutiveDashboard,
+  ExecutiveKpi,
+  ForecastBundle,
+  OpsNotification,
   OpsSource,
+  Recommendation,
+  SeriesPoint,
+  Subscription,
+  VendorSpend,
 } from "./types";

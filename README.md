@@ -2,67 +2,61 @@
 
 See what your operations are **really** telling you.
 
-Greenfield operator product shell for [Mirotech Ops Intelligence](https://github.com/hopper911/mirotech-ops-intelligence).
+Self-initiated B2B SaaS product concept: one workspace for cloud spend, software subscriptions, AI API usage, automation health, recommendations, and savings forecasts.
+
+All figures use the fictional **Northline Commerce** workspace and are labeled **sample data**.
 
 ## Stack
 
 - Next.js App Router + TypeScript + Tailwind CSS v4
-- Auth.js (NextAuth v5) credentials demo login
-- Mock `OpsSource` data layer ready for real connectors
-- Vercel-ready single deploy surface
+- Auth.js (NextAuth v5) demo credentials
+- Mock `OpsSource` domain layer (swap for live connectors later)
 
 ## Local run
 
 ```bash
 cp .env.example .env.local
-# set AUTH_SECRET (openssl rand -base64 32)
+# set AUTH_SECRET
 
 npm install
 npm run dev
 ```
 
-- Landing: http://localhost:3000  
-- Login: http://localhost:3000/login  
-- App: http://localhost:3000/app  
+Demo login: `demo@mirotech.io` / `ops-demo`
 
-### Demo credentials
+## Product routes (sign-in required)
 
-- Email: `demo@mirotech.io`
-- Password: `ops-demo`
-
-## Brand tokens
-
-| Token | Hex |
+| Route | Screen |
 | --- | --- |
-| Navy | `#0A1628` |
-| Blue | `#2563EB` |
-| Cyan | `#22D3EE` |
-| Green | `#7DDC65` |
-| Surface | `#F5F7FA` |
+| `/app` | Executive dashboard |
+| `/app/expenses` | Cloud + software expenses |
+| `/app/ai-usage` | AI API usage |
+| `/app/subscriptions` | Subscription inventory |
+| `/app/automation` | Automation health |
+| `/app/recommendations/[id]` | Recommendation detail |
+| `/app/forecast` | Savings forecast |
+| `/app/assistant` | AI assistant |
+| `/app/notifications` | Anomaly alerts |
+| `/app/onboarding` | Guided onboarding |
 
-Assets live in `public/brand/` (logo mark, app icon, full brand kit PNG).
-
-## App routes
+## Marketing & sales
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Marketing landing |
-| `/login` | Demo sign-in |
-| `/app` | Operator overview (KPIs + insights) |
-| `/app/performance` | Performance module |
-| `/app/optimization` | Optimization module |
-| `/app/connectivity` | Connectivity module |
-| `/app/systems` | Systems module |
-| `/app/insights` | Insights module |
+| `/` | Homepage |
+| `/product` | Product landing |
+| `/pricing` | Sample pricing |
+| `/concept` | Credibility / case study |
+| `/sales` | Sales kit hub |
+| `/sales/one-pager` | Printable one-pager |
+| `/sales/deck` | 10-slide deck |
+| `/sales/brief` | Solution brief |
+| `/sales/email` | Launch email preview |
+| `/sales/ads` | LinkedIn ad mocks |
+| `/brand` | Compact brand guidelines |
 
-## Data layer
+## Brand
 
-```ts
-import { opsSource } from "@/lib/ops";
-```
+Navy `#0A1628` · Blue `#2563EB` · Cyan `#22D3EE` · Green `#7DDC65` · Surface `#F5F7FA`
 
-`opsSource` currently points at `MockOpsSource`. Implement `OpsSource` for live BI / ERP / calendar feeds and swap the export in `src/lib/ops/index.ts`.
-
-## License
-
-Private / proprietary unless otherwise stated.
+Assets in `public/brand/`.

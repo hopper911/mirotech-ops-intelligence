@@ -10,7 +10,7 @@ import { FormEvent, Suspense, useState } from "react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/app";
+  const callbackUrl = searchParams.get("callbackUrl") || "/app/onboarding";
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
