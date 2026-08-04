@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, isAdminSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export default auth((req) => {
@@ -8,6 +8,12 @@ export default auth((req) => {
     login.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(login);
   }
+
+  const isDataStudio = req.nextUrl.pathname.startsWith("/app/data");
+  if (isDataStudio && !isAdminSession(req.auth)) {
+    return NextResponse.redirect(new URL("/app", req.nextUrl.origin));
+  }
+
   return NextResponse.next();
 });
 

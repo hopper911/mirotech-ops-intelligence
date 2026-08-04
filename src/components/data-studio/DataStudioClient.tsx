@@ -84,8 +84,8 @@ export function DataStudioClient() {
           <p className="brand-sub text-[10px] text-cyan">Data Studio</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Customize sample data</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Edit every dataset used by the demo. Changes save to this browser (localStorage). Reset
-            restores Northline defaults.
+            Admin only. Edit every dataset used by the demo. Changes save to this browser
+            (localStorage) and do not affect client sessions. Reset restores Northline defaults.
           </p>
         </div>
         <SampleDataBadge />

@@ -23,6 +23,8 @@ type WorkspaceContextValue = {
   workspace: WorkspaceData;
   hydrated: boolean;
   dirty: boolean;
+  /** True only for admin sessions — clients are read-only. */
+  canEdit: boolean;
   setWorkspace: (next: WorkspaceData) => void;
   updateWorkspace: (updater: (prev: WorkspaceData) => WorkspaceData) => void;
   /** Apply updater and persist to localStorage in one step. */
@@ -35,65 +37,94 @@ type WorkspaceContextValue = {
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
-export function WorkspaceProvider({ children }: { children: ReactNode }) {
+export function WorkspaceProvider({
+  children,
+  canEdit = false,
+}: {
+  children: ReactNode;
+  canEdit?: boolean;
+}) {
   const [workspace, setWorkspaceState] = useState<WorkspaceData>(() => getDefaultWorkspace());
   const [hydrated, setHydrated] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    const stored = loadWorkspaceFromStorage();
-    if (stored) {
-      setWorkspaceState(stored);
+    if (canEdit) {
+      const stored = loadWorkspaceFromStorage();
+      if (stored) {
+        setWorkspaceState(stored);
+      }
+    } else {
+      setWorkspaceState(getDefaultWorkspace());
     }
     setHydrated(true);
-  }, []);
+  }, [canEdit]);
 
-  const setWorkspace = useCallback((next: WorkspaceData) => {
-    setWorkspaceState(cloneWorkspace(next));
-    setDirty(true);
-  }, []);
-
-  const updateWorkspace = useCallback((updater: (prev: WorkspaceData) => WorkspaceData) => {
-    setWorkspaceState((prev) => {
+  const setWorkspace = useCallback(
+    (next: WorkspaceData) => {
+      if (!canEdit) return;
+      setWorkspaceState(cloneWorkspace(next));
       setDirty(true);
-      return cloneWorkspace(updater(prev));
-    });
-  }, []);
+    },
+    [canEdit],
+  );
 
-  const updateAndSave = useCallback((updater: (prev: WorkspaceData) => WorkspaceData) => {
-    setWorkspaceState((prev) => {
-      const next = cloneWorkspace(updater(prev));
-      saveWorkspaceToStorage(next);
-      setDirty(false);
-      return next;
-    });
-  }, []);
+  const updateWorkspace = useCallback(
+    (updater: (prev: WorkspaceData) => WorkspaceData) => {
+      if (!canEdit) return;
+      setWorkspaceState((prev) => {
+        setDirty(true);
+        return cloneWorkspace(updater(prev));
+      });
+    },
+    [canEdit],
+  );
+
+  const updateAndSave = useCallback(
+    (updater: (prev: WorkspaceData) => WorkspaceData) => {
+      if (!canEdit) return;
+      setWorkspaceState((prev) => {
+        const next = cloneWorkspace(updater(prev));
+        saveWorkspaceToStorage(next);
+        setDirty(false);
+        return next;
+      });
+    },
+    [canEdit],
+  );
 
   const save = useCallback(() => {
+    if (!canEdit) return;
     saveWorkspaceToStorage(workspace);
     setDirty(false);
-  }, [workspace]);
+  }, [canEdit, workspace]);
 
   const reset = useCallback(() => {
+    if (!canEdit) return;
     clearWorkspaceStorage();
     setWorkspaceState(getDefaultWorkspace());
     setDirty(false);
-  }, []);
+  }, [canEdit]);
 
   const exportJson = useCallback(() => exportWorkspaceJson(workspace), [workspace]);
 
-  const importJson = useCallback((raw: string) => {
-    const next = importWorkspaceJson(raw);
-    setWorkspaceState(next);
-    saveWorkspaceToStorage(next);
-    setDirty(false);
-  }, []);
+  const importJson = useCallback(
+    (raw: string) => {
+      if (!canEdit) return;
+      const next = importWorkspaceJson(raw);
+      setWorkspaceState(next);
+      saveWorkspaceToStorage(next);
+      setDirty(false);
+    },
+    [canEdit],
+  );
 
   const value = useMemo(
     () => ({
       workspace,
       hydrated,
       dirty,
+      canEdit,
       setWorkspace,
       updateWorkspace,
       updateAndSave,
@@ -106,6 +137,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       workspace,
       hydrated,
       dirty,
+      canEdit,
       setWorkspace,
       updateWorkspace,
       updateAndSave,

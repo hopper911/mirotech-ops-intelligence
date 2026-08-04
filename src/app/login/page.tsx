@@ -85,8 +85,8 @@ export default function LoginPage() {
         <Logo variant="light" size="md" href="/" />
         <h1 className="mt-8 text-2xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-muted">
-          Local demo auth for operators. Credentials provider — replace with SSO
-          when ready.
+          Client demo sign-in. Operators explore sample ops data in a read-only
+          workspace.
         </p>
         <Suspense fallback={<p className="mt-8 text-sm text-muted">Loading…</p>}>
           <LoginForm />

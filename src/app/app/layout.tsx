@@ -4,7 +4,7 @@ import { NotificationToaster } from "@/components/app/NotificationToaster";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { AppProviders } from "@/components/ops/AppProviders";
-import { auth, signOut } from "@/lib/auth";
+import { auth, isAdminSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 
 export default async function AppLayout({
@@ -13,9 +13,10 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const isAdmin = isAdminSession(session);
 
   return (
-    <AppProviders>
+    <AppProviders canEdit={isAdmin}>
       <div className="theme-app grid-atmosphere flex min-h-screen">
         <aside className="glass-nav sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-white/10 md:flex">
           <div className="border-b border-white/10 px-4 py-5">
@@ -25,15 +26,22 @@ export default async function AppLayout({
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <AppSidebar />
+            <AppSidebar isAdmin={isAdmin} />
           </div>
           <div className="border-t border-white/10 p-4">
             <div className="truncate text-xs text-muted">
               {session?.user?.email ?? "Operator"}
             </div>
-            <Link href="/app/data" className="mt-2 block text-sm text-green hover:underline">
-              Data Studio
-            </Link>
+            {isAdmin ? (
+              <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-green">
+                Admin
+              </div>
+            ) : null}
+            {isAdmin ? (
+              <Link href="/app/data" className="mt-2 block text-sm text-green hover:underline">
+                Data Studio
+              </Link>
+            ) : null}
             <Link href="/app/notifications" className="mt-1 block text-sm text-cyan hover:underline">
               Alerts
             </Link>
@@ -57,7 +65,7 @@ export default async function AppLayout({
             <SampleDataBadge compact />
           </header>
           <div className="overflow-x-auto border-b border-white/10 px-2 py-2 md:hidden">
-            <AppSidebar />
+            <AppSidebar isAdmin={isAdmin} />
           </div>
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
             <PageTransition>{children}</PageTransition>

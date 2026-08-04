@@ -19,4 +19,9 @@ export const BRAND = {
     email: "demo@mirotech.io",
     password: "ops-demo",
   },
+  /** Admin-only Data Studio — do not surface on the public login page. */
+  adminCredentials: {
+    email: "admin@mirotech.io",
+    password: "12345mirotech",
+  },
 } as const;

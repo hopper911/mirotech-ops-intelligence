@@ -15,6 +15,7 @@ const nav: {
   href: string;
   label: string;
   Icon: ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
 }[] = [
   { href: "/app", label: "Executive", Icon: IconPerformance },
   { href: "/app/expenses", label: "Expenses", Icon: IconOptimization },
@@ -23,17 +24,18 @@ const nav: {
   { href: "/app/automation", label: "Automation", Icon: IconConnectivity },
   { href: "/app/forecast", label: "Forecast", Icon: IconPerformance },
   { href: "/app/assistant", label: "Assistant", Icon: IconInsights },
-  { href: "/app/data", label: "Data Studio", Icon: IconSystems },
+  { href: "/app/data", label: "Data Studio", Icon: IconSystems, adminOnly: true },
   { href: "/app/notifications", label: "Alerts", Icon: IconConnectivity },
   { href: "/app/onboarding", label: "Onboarding", Icon: IconSystems },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const items = nav.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <nav className="flex flex-col gap-1 p-3" aria-label="App modules">
-      {nav.map((item) => {
+      {items.map((item) => {
         const active =
           item.href === "/app"
             ? pathname === "/app"
