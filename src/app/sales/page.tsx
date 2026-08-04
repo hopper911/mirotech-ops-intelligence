@@ -1,4 +1,6 @@
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
+import { GlassCard } from "@/components/ui/GlassCard";
 import Link from "next/link";
 
 const items = [
@@ -13,23 +15,25 @@ export default function SalesHubPage() {
   return (
     <MarketingShell>
       <main className="mx-auto w-full max-w-6xl px-6 py-12">
-        <p className="brand-sub text-[11px] text-cyan">Sales enablement</p>
-        <h1 className="mt-3 text-4xl font-semibold text-white">Sales kit</h1>
-        <p className="mt-4 max-w-2xl text-sm text-muted">
-          Portfolio sales assets for Mirotech Ops Intelligence. Sample messaging only.
-        </p>
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <Reveal>
+          <p className="brand-sub text-[11px] text-cyan">Sales enablement</p>
+          <h1 className="mt-3 text-4xl font-semibold text-white">Sales kit</h1>
+          <p className="mt-4 max-w-2xl text-sm text-muted">
+            Portfolio sales assets for Mirotech Ops Intelligence. Sample messaging only.
+          </p>
+        </Reveal>
+        <RevealStagger className="mt-10 grid gap-4 md:grid-cols-2">
           {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-2xl border border-border bg-card/60 p-5 transition hover:border-cyan/40"
-            >
-              <h2 className="font-semibold text-white">{item.title}</h2>
-              <p className="mt-2 text-sm text-muted">{item.body}</p>
-            </Link>
+            <RevealItem key={item.href}>
+              <Link href={item.href} className="block h-full">
+                <GlassCard lift className="h-full p-5">
+                  <h2 className="font-semibold text-white">{item.title}</h2>
+                  <p className="mt-2 text-sm text-muted">{item.body}</p>
+                </GlassCard>
+              </Link>
+            </RevealItem>
           ))}
-        </div>
+        </RevealStagger>
       </main>
     </MarketingShell>
   );

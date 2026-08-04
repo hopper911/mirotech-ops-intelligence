@@ -2,6 +2,7 @@ import { Logo } from "@/components/brand/Logo";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { NotificationToaster } from "@/components/app/NotificationToaster";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { PageTransition } from "@/components/motion/PageTransition";
 import { auth, signOut } from "@/lib/auth";
 import Link from "next/link";
 
@@ -14,8 +15,8 @@ export default async function AppLayout({
 
   return (
     <div className="theme-app grid-atmosphere flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-navy/90 md:flex">
-        <div className="border-b border-border px-4 py-5">
+      <aside className="glass-nav sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-white/10 md:flex">
+        <div className="border-b border-white/10 px-4 py-5">
           <Logo variant="light" size="sm" href="/app" />
           <div className="mt-3">
             <SampleDataBadge compact />
@@ -24,7 +25,7 @@ export default async function AppLayout({
         <div className="flex-1 overflow-y-auto">
           <AppSidebar />
         </div>
-        <div className="border-t border-border p-4">
+        <div className="border-t border-white/10 p-4">
           <div className="truncate text-xs text-muted">
             {session?.user?.email ?? "Operator"}
           </div>
@@ -46,14 +47,16 @@ export default async function AppLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden">
+        <header className="glass-nav flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 md:hidden">
           <Logo variant="light" size="sm" href="/app" showWordmark />
           <SampleDataBadge compact />
         </header>
-        <div className="border-b border-border px-2 py-2 md:hidden overflow-x-auto">
+        <div className="overflow-x-auto border-b border-white/10 px-2 py-2 md:hidden">
           <AppSidebar />
         </div>
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
       <NotificationToaster />
     </div>

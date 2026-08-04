@@ -24,7 +24,7 @@ export default async function ExecutivePage() {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {dash.kpis.map((kpi) => (
-          <div key={kpi.id} className="rounded-2xl border border-border bg-card/80 p-4">
+          <div key={kpi.id} className="glass-app rounded-2xl p-4">
             <div className="text-xs uppercase tracking-[0.14em] text-muted">{kpi.label}</div>
             <div className="mt-2 flex items-end justify-between gap-2">
               <div className="text-2xl font-semibold text-white">{kpi.value}</div>
@@ -46,7 +46,7 @@ export default async function ExecutivePage() {
       </div>
 
       <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-2xl border border-border bg-card/80 p-5">
+        <div className="glass-app rounded-2xl p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm uppercase tracking-[0.16em] text-muted">
               Tech spend trend ($k)
@@ -62,7 +62,7 @@ export default async function ExecutivePage() {
             ))}
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-5">
+        <div className="glass-app rounded-2xl p-5">
           <h2 className="text-sm uppercase tracking-[0.16em] text-muted">Risk notes</h2>
           <ul className="mt-4 space-y-3">
             {dash.riskNotes.map((note) => (
@@ -89,7 +89,7 @@ export default async function ExecutivePage() {
             <Link
               key={rec.id}
               href={`/app/recommendations/${rec.id}`}
-              className="rounded-2xl border border-border bg-card/80 p-5 transition hover:border-cyan/40"
+              className="glass-app glass-lift rounded-2xl p-5"
             >
               <div className="text-[10px] uppercase tracking-[0.14em] text-cyan">
                 {rec.category} · {rec.risk} risk

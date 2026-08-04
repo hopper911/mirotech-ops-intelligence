@@ -67,7 +67,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-full bg-green py-3 text-sm font-semibold text-navy transition hover:brightness-110 disabled:opacity-60"
+        className="btn-specular w-full rounded-full bg-green py-3 text-sm font-semibold text-navy disabled:opacity-60"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>
@@ -81,7 +81,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="theme-app grid-atmosphere flex min-h-screen flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card/80 p-8 backdrop-blur">
+      <div className="glass-strong animate-fade-up w-full max-w-md rounded-3xl p-8">
         <Logo variant="light" size="md" href="/" />
         <h1 className="mt-8 text-2xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-muted">

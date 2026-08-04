@@ -16,7 +16,7 @@ export default function AdsPage() {
         <p className="mt-2 text-sm text-muted">Portfolio frames only — not live campaigns.</p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
-          <article className="rounded-2xl border border-border bg-card/70 p-5">
+          <article className="glass glass-lift rounded-2xl p-5">
             <div className="text-xs text-muted">Single image ad</div>
             <div className="mt-3 rounded-xl border border-border bg-navy p-6">
               <div className="brand-display text-sm text-white">Mirotech</div>
@@ -33,7 +33,7 @@ export default function AdsPage() {
             </div>
           </article>
 
-          <article className="rounded-2xl border border-border bg-card/70 p-5">
+          <article className="glass glass-lift rounded-2xl p-5">
             <div className="text-xs text-muted">Carousel · 4 frames</div>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {carousel.map((line, idx) => (

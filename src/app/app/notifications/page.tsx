@@ -33,7 +33,7 @@ export default async function NotificationsPage() {
           <li key={n.id}>
             <Link
               href={n.href}
-              className="block rounded-2xl border border-border bg-card/80 p-4 transition hover:border-cyan/40"
+              className="glass-app glass-lift block rounded-2xl p-4"
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] uppercase tracking-[0.14em] text-cyan">

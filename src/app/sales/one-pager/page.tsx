@@ -17,7 +17,7 @@ export default function OnePagerPage() {
           </button>
         </div>
 
-        <article className="rounded-3xl border border-border bg-card/80 p-8 print:border-0 print:bg-white print:text-navy">
+        <article className="glass-strong rounded-3xl p-8 print:border-0 print:bg-white print:text-navy">
           <Logo variant="dark" size="md" href={undefined} />
           <h1 className="mt-6 text-2xl font-semibold print:text-navy">{BRAND.legalName}</h1>
           <p className="mt-2 text-sm text-muted print:text-navy/70">{BRAND.tagline}</p>

@@ -28,7 +28,7 @@ export function AssistantClient({ presets }: { presets: AssistantPreset[] }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_16rem]">
-      <div className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5">
+      <div className="glass-app rounded-2xl p-4 sm:p-5">
         <div className="space-y-4">
           {turns.map((turn) => (
             <div
@@ -69,7 +69,7 @@ export function AssistantClient({ presets }: { presets: AssistantPreset[] }) {
               key={p.id}
               type="button"
               onClick={() => ask(p.question)}
-              className="rounded-xl border border-border bg-card/60 px-3 py-2 text-left text-xs text-white hover:border-cyan/40"
+              className="glass glass-lift rounded-xl px-3 py-2 text-left text-xs text-white"
             >
               {p.question}
             </button>

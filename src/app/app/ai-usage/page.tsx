@@ -33,7 +33,7 @@ export default async function AiUsagePage() {
         <span className="font-semibold text-white">{formatUsd(total)}</span>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card/80">
+      <div className="overflow-x-auto glass-app rounded-2xl">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-[0.12em] text-muted">
             <tr>

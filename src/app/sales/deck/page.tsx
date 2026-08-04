@@ -33,7 +33,7 @@ export default function DeckPage() {
           </p>
         </div>
 
-        <div className="flex min-h-[22rem] flex-col justify-center rounded-3xl border border-border bg-card/80 p-10">
+        <div className="glass-strong flex min-h-[22rem] flex-col justify-center rounded-3xl p-10">
           <h2 className="text-3xl font-semibold text-white">{slide.title}</h2>
           <p className="mt-4 max-w-xl text-lg text-muted">{slide.body}</p>
         </div>
@@ -43,7 +43,7 @@ export default function DeckPage() {
             type="button"
             disabled={i === 0}
             onClick={() => setI((x) => Math.max(0, x - 1))}
-            className="rounded-full border border-border px-4 py-2 text-sm disabled:opacity-40"
+            className="btn-ghost-glass rounded-full px-4 py-2 text-sm disabled:opacity-40"
           >
             Previous
           </button>
@@ -51,7 +51,7 @@ export default function DeckPage() {
             type="button"
             disabled={i === slides.length - 1}
             onClick={() => setI((x) => Math.min(slides.length - 1, x + 1))}
-            className="rounded-full bg-green px-4 py-2 text-sm font-semibold text-navy disabled:opacity-40"
+            className="btn-specular rounded-full bg-green px-4 py-2 text-sm font-semibold text-navy disabled:opacity-40"
           >
             Next
           </button>

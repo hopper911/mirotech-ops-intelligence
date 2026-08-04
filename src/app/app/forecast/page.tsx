@@ -22,19 +22,19 @@ export default async function ForecastPage() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">{forecast.current.label}</div>
           <div className="mt-1 text-2xl font-semibold text-white">
             {formatUsd(forecast.current.monthlySpend)}/mo
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">{forecast.optimized.label}</div>
           <div className="mt-1 text-2xl font-semibold text-green">
             {formatUsd(forecast.optimized.monthlySpend)}/mo
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Annual savings (sample)</div>
           <div className="mt-1 text-2xl font-semibold text-green">
             {formatUsd(forecast.annualSavings)}
@@ -42,7 +42,7 @@ export default async function ForecastPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card/80 p-5">
+      <div className="glass-app rounded-2xl p-5">
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
           <span className="inline-flex items-center gap-2">
             <span className="h-0.5 w-6 border-t-2 border-dashed border-muted" /> Current
@@ -59,7 +59,7 @@ export default async function ForecastPage() {
       </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card/80 p-5">
+        <div className="glass-app rounded-2xl p-5">
           <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Assumptions</h2>
           <ul className="mt-4 space-y-2 text-sm text-muted">
             {forecast.assumptions.map((a) => (
@@ -67,7 +67,7 @@ export default async function ForecastPage() {
             ))}
           </ul>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-5">
+        <div className="glass-app rounded-2xl p-5">
           <h2 className="text-sm uppercase tracking-[0.14em] text-muted">
             Driving recommendations
           </h2>

@@ -27,7 +27,7 @@ export function NotificationToaster() {
   if (!toast) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-[min(100%,22rem)] rounded-2xl border border-cyan/40 bg-navy/95 p-4 shadow-2xl shadow-cyan/10 backdrop-blur">
+    <div className="glass-strong fixed bottom-4 right-4 z-50 w-[min(100%,22rem)] rounded-2xl border border-cyan/30 p-4 shadow-2xl shadow-cyan/10">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-[0.16em] text-cyan">

@@ -23,7 +23,7 @@ export default function BrandGuidelinesPage() {
         </p>
 
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card/70 p-6">
+          <div className="glass rounded-2xl p-6">
             <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Logo</h2>
             <div className="mt-6 space-y-6">
               <div className="rounded-xl bg-surface p-6">
@@ -42,7 +42,7 @@ export default function BrandGuidelinesPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card/70 p-6">
+          <div className="glass rounded-2xl p-6">
             <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Color</h2>
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {Object.entries(BRAND.colors).map(([name, hex]) => (
@@ -59,7 +59,7 @@ export default function BrandGuidelinesPage() {
         </section>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card/70 p-6">
+          <div className="glass rounded-2xl p-6">
             <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Typography</h2>
             <p className="brand-display mt-4 text-2xl text-white">Manrope · display</p>
             <p className="mt-2 text-base text-muted">Geist Sans · UI body and tables</p>
@@ -67,7 +67,7 @@ export default function BrandGuidelinesPage() {
               Spacing rhythm: 4 / 8 / 12 / 16 / 24 / 32. Cards use 16–20px padding; section gaps 24–32.
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-card/70 p-6">
+          <div className="glass rounded-2xl p-6">
             <h2 className="text-sm uppercase tracking-[0.14em] text-muted">
               Data visualization
             </h2>
@@ -83,7 +83,7 @@ export default function BrandGuidelinesPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-border bg-card/70 p-6">
+        <section className="mt-6 glass rounded-2xl p-6">
           <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Full kit reference</h2>
           <p className="mt-2 text-sm text-muted">
             Source brand board (icons, photography direction, variants):

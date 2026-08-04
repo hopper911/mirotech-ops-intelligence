@@ -34,7 +34,7 @@ export function OnboardingClient() {
   }
 
   return (
-    <div className="mx-auto max-w-xl rounded-3xl border border-border bg-card/80 p-8">
+    <div className="glass-strong mx-auto max-w-xl rounded-3xl p-8">
       <div className="text-xs uppercase tracking-[0.16em] text-cyan">
         Onboarding · {index + 1}/{steps.length}
       </div>
@@ -45,7 +45,7 @@ export function OnboardingClient() {
           <button
             type="button"
             onClick={() => setIndex((i) => i + 1)}
-            className="rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-navy"
+            className="btn-specular rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-navy"
           >
             Continue
           </button>
@@ -53,7 +53,7 @@ export function OnboardingClient() {
           <button
             type="button"
             onClick={finish}
-            className="rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-navy"
+            className="btn-specular rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-navy"
           >
             Enter dashboard
           </button>
@@ -61,7 +61,7 @@ export function OnboardingClient() {
         <button
           type="button"
           onClick={finish}
-          className="rounded-full border border-border px-5 py-2.5 text-sm text-muted hover:text-white"
+          className="btn-ghost-glass rounded-full px-5 py-2.5 text-sm text-muted hover:text-white"
         >
           Skip
         </button>

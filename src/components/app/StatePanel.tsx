@@ -17,7 +17,7 @@ export function StatePanel({
   } as const;
 
   return (
-    <div className={`rounded-2xl border bg-card/60 p-8 text-center ${tones[variant]}`}>
+    <div className={`glass-app rounded-2xl p-8 text-center ${tones[variant]}`}>
       <div className="text-xs uppercase tracking-[0.16em]">{variant}</div>
       <h3 className="mt-2 text-lg font-semibold text-white">{title}</h3>
       {body ? <p className="mx-auto mt-2 max-w-md text-sm text-muted">{body}</p> : null}

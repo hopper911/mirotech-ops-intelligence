@@ -21,15 +21,15 @@ export default async function ExpensesPage() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Monthly total</div>
           <div className="mt-1 text-2xl font-semibold text-white">{formatUsd(monthlyTotal)}</div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Budget</div>
           <div className="mt-1 text-2xl font-semibold text-white">{formatUsd(budgetTotal)}</div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Variance</div>
           <div className={`mt-1 text-2xl font-semibold ${variance > 0 ? "text-cyan" : "text-green"}`}>
             {variance > 0 ? "+" : ""}
@@ -38,7 +38,7 @@ export default async function ExpensesPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card/80">
+      <div className="overflow-x-auto glass-app rounded-2xl">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-[0.12em] text-muted">
             <tr>

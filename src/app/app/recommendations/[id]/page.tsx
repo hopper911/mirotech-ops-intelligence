@@ -36,23 +36,23 @@ export default async function RecommendationDetailPage({
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Savings / mo</div>
           <div className="mt-1 text-xl font-semibold text-green">
             {formatUsd(rec.savingsMonthly)}
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Risk</div>
           <div className="mt-1 text-xl font-semibold capitalize text-white">{rec.risk}</div>
         </div>
-        <div className="rounded-2xl border border-border bg-card/80 p-4">
+        <div className="glass-app rounded-2xl p-4">
           <div className="text-xs text-muted">Owner</div>
           <div className="mt-1 text-xl font-semibold text-white">{rec.owner}</div>
         </div>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card/80 p-5">
+      <section className="glass-app rounded-2xl p-5">
         <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Evidence</h2>
         <ul className="mt-4 space-y-3">
           {rec.evidence.map((line) => (

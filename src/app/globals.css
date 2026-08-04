@@ -12,6 +12,12 @@
   --card: #ffffff;
   --border: #d8e0ea;
   --ring: var(--blue);
+  --glass-bg: rgba(18, 32, 51, 0.45);
+  --glass-bg-strong: rgba(10, 22, 40, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-blur: 18px;
+  --glass-blur-strong: 28px;
 }
 
 @theme inline {
@@ -59,10 +65,213 @@ body {
 }
 
 .grid-atmosphere {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--navy);
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.35), transparent),
-    radial-gradient(ellipse 40% 30% at 90% 10%, rgba(34, 211, 238, 0.12), transparent),
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: auto, auto, 48px 48px, 48px 48px;
+    radial-gradient(ellipse 90% 55% at 50% -18%, rgba(37, 99, 235, 0.42), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 92% 8%, rgba(34, 211, 238, 0.16), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 8% 70%, rgba(125, 220, 101, 0.08), transparent 55%),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, auto, 48px 48px, 48px 48px;
+}
+
+.grid-atmosphere::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* —— Apple-style glass —— */
+.glass,
+.glass-strong,
+.glass-nav,
+.glass-app {
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 8px 32px rgba(0, 0, 0, 0.28);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass {
+    background: rgba(18, 32, 51, 0.38);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+  }
+
+  .glass-strong {
+    background: rgba(10, 22, 40, 0.55);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.45);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.45);
+  }
+
+  .glass-nav {
+    background: rgba(10, 22, 40, 0.55);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  .glass-app {
+    background: rgba(18, 32, 51, 0.5);
+    -webkit-backdrop-filter: blur(12px) saturate(1.25);
+    backdrop-filter: blur(12px) saturate(1.25);
+  }
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+.glass-nav {
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.glass-lift {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.glass-lift:hover {
+  transform: translateY(-3px);
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 14px 40px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(34, 211, 238, 0.08);
+}
+
+.btn-specular {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.btn-specular::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+}
+
+.btn-specular:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 8px 24px rgba(125, 220, 101, 0.25);
+}
+
+.btn-specular:hover::after {
+  transform: translateX(120%);
+}
+
+.btn-ghost-glass {
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.btn-ghost-glass:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(34, 211, 238, 0.08);
+  transform: translateY(-1px);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.icon-well {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background: linear-gradient(
+    145deg,
+    rgba(37, 99, 235, 0.28),
+    rgba(34, 211, 238, 0.08) 45%,
+    rgba(125, 220, 101, 0.12)
+  );
+  color: #22d3ee;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.text-signal {
+  background: linear-gradient(90deg, #2563eb, #22d3ee 45%, #7ddc65);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.node-rail {
+  background-image: radial-gradient(circle, rgba(34, 211, 238, 0.55) 1.2px, transparent 1.4px);
+  background-size: 28px 28px;
+  background-position: 0 0;
+  opacity: 0.25;
+  mask-image: linear-gradient(90deg, transparent, black 20%, black 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-lift,
+  .btn-specular,
+  .btn-ghost-glass,
+  .btn-specular::after {
+    transition: none !important;
+  }
+
+  .glass-lift:hover,
+  .btn-specular:hover,
+  .btn-ghost-glass:hover {
+    transform: none !important;
+  }
+
+  .btn-specular:hover::after {
+    transform: none !important;
+  }
+
+  .animate-fade-up {
+    animation: none !important;
+  }
 }

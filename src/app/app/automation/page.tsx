@@ -19,7 +19,7 @@ export default async function AutomationPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {jobs.map((job) => (
-          <article key={job.id} className="rounded-2xl border border-border bg-card/80 p-5">
+          <article key={job.id} className="glass-app rounded-2xl p-5">
             <div className="flex items-start justify-between gap-3">
               <h2 className="font-semibold text-white">{job.name}</h2>
               <span
