@@ -1,9 +1,13 @@
+"use client";
+
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
-import { opsSource } from "@/lib/ops";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import Link from "next/link";
 
-export default async function NotificationsPage() {
-  const notes = await opsSource.getNotifications();
+export default function NotificationsPage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+  const notes = workspace.notifications;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -22,8 +26,10 @@ export default async function NotificationsPage() {
         <div className="w-64 rounded-[2rem] border-4 border-border bg-navy p-3 shadow-xl">
           <div className="rounded-2xl border border-cyan/30 bg-card p-3">
             <div className="text-[9px] uppercase tracking-[0.16em] text-cyan">Push mock</div>
-            <div className="mt-1 text-sm font-semibold text-white">AI spend anomaly</div>
-            <p className="mt-1 text-xs text-muted">Support GPT-4o +38% WoW</p>
+            <div className="mt-1 text-sm font-semibold text-white">
+              {notes[0]?.title ?? "AI spend anomaly"}
+            </div>
+            <p className="mt-1 text-xs text-muted">{notes[0]?.body ?? "Sample alert"}</p>
           </div>
         </div>
       </div>
@@ -31,10 +37,7 @@ export default async function NotificationsPage() {
       <ul className="space-y-3">
         {notes.map((n) => (
           <li key={n.id}>
-            <Link
-              href={n.href}
-              className="glass-app glass-lift block rounded-2xl p-4"
-            >
+            <Link href={n.href} className="glass-app glass-lift block rounded-2xl p-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] uppercase tracking-[0.14em] text-cyan">
                   {n.severity}

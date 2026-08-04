@@ -23,6 +23,7 @@ const nav: {
   { href: "/app/automation", label: "Automation", Icon: IconConnectivity },
   { href: "/app/forecast", label: "Forecast", Icon: IconPerformance },
   { href: "/app/assistant", label: "Assistant", Icon: IconInsights },
+  { href: "/app/data", label: "Data Studio", Icon: IconSystems },
   { href: "/app/notifications", label: "Alerts", Icon: IconConnectivity },
   { href: "/app/onboarding", label: "Onboarding", Icon: IconSystems },
 ];

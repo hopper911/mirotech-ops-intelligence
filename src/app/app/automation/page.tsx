@@ -1,8 +1,12 @@
-import { SampleDataBadge } from "@/components/app/SampleDataBadge";
-import { opsSource } from "@/lib/ops";
+"use client";
 
-export default async function AutomationPage() {
-  const jobs = await opsSource.getAutomation();
+import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
+
+export default function AutomationPage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+  const jobs = workspace.automation;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">

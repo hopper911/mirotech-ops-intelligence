@@ -1,11 +1,16 @@
+"use client";
+
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { Sparkline } from "@/components/app/Sparkline";
-import { opsSource } from "@/lib/ops";
-import Link from "next/link";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
+import { buildExecutive } from "@/lib/ops";
+import Link from "next/link";
 
-export default async function ExecutivePage() {
-  const dash = await opsSource.getExecutive();
+export default function ExecutivePage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+  const dash = buildExecutive(workspace);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">

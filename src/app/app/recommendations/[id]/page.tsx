@@ -1,23 +1,32 @@
+"use client";
+
 import { RecommendationActions } from "@/components/app/RecommendationActions";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
-import { opsSource } from "@/lib/ops";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { use } from "react";
 
-export async function generateStaticParams() {
-  const recs = await opsSource.getRecommendations();
-  return recs.map((r) => ({ id: r.id }));
-}
-
-export default async function RecommendationDetailPage({
+export default function RecommendationDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const rec = await opsSource.getRecommendation(id);
-  if (!rec) notFound();
+  const { id } = use(params);
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+
+  const rec = workspace.recommendations.find((r) => r.id === id);
+  if (!rec) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <p className="text-sm text-muted">Recommendation not found.</p>
+        <Link href="/app" className="mt-4 inline-block text-sm text-cyan hover:underline">
+          ← Executive
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">

@@ -1,9 +1,15 @@
-import { SampleDataBadge } from "@/components/app/SampleDataBadge";
-import { formatUsd } from "@/lib/format";
-import { opsSource } from "@/lib/ops";
+"use client";
 
-export default async function AiUsagePage() {
-  const { models, anomalies } = await opsSource.getAiUsage();
+import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
+import { formatUsd } from "@/lib/format";
+
+export default function AiUsagePage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+
+  const models = workspace.models;
+  const anomalies = models.filter((m) => m.anomaly).map((m) => `${m.model}: ${m.anomaly}`);
   const total = models.reduce((s, m) => s + m.cost, 0);
 
   return (
@@ -22,9 +28,7 @@ export default async function AiUsagePage() {
       <div className="rounded-2xl border border-cyan/30 bg-cyan/5 p-4">
         <div className="text-xs uppercase tracking-[0.14em] text-cyan">Anomalies</div>
         <ul className="mt-2 space-y-1 text-sm text-foreground/90">
-          {anomalies.map((a) => (
-            <li key={a}>• {a}</li>
-          ))}
+          {anomalies.length ? anomalies.map((a) => <li key={a}>• {a}</li>) : <li>• None</li>}
         </ul>
       </div>
 
@@ -33,7 +37,7 @@ export default async function AiUsagePage() {
         <span className="font-semibold text-white">{formatUsd(total)}</span>
       </div>
 
-      <div className="overflow-x-auto glass-app rounded-2xl">
+      <div className="glass-app overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-[0.12em] text-muted">
             <tr>

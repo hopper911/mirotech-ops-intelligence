@@ -36,8 +36,18 @@ Demo login: `demo@mirotech.io` / `ops-demo`
 | `/app/recommendations/[id]` | Recommendation detail |
 | `/app/forecast` | Savings forecast |
 | `/app/assistant` | AI assistant |
+| `/app/data` | Data Studio (edit sample datasets) |
 | `/app/notifications` | Anomaly alerts |
 | `/app/onboarding` | Guided onboarding |
+
+## Data Studio
+
+Signed-in demo users can open **Data Studio** (`/app/data`) to view and edit every Northline sample dataset (company, KPIs, vendors, AI models, subscriptions, automation, recommendations, forecast, assistant presets, alerts).
+
+- Edits persist in **browser localStorage** (`mirotech.ops.workspace`) — no database required for the Vercel demo.
+- **Save** writes the overlay; **Reset to Northline defaults** clears it.
+- **Export / Import JSON** for portfolio handoff between browsers.
+- Changes are local to that device/browser; other visitors still see defaults until they edit.
 
 ## Marketing & sales
 

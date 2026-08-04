@@ -1,10 +1,15 @@
+"use client";
+
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { StatePanel } from "@/components/app/StatePanel";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd, utilizationPct } from "@/lib/format";
-import { opsSource } from "@/lib/ops";
 
-export default async function SubscriptionsPage() {
-  const rows = await opsSource.getSubscriptions();
+export default function SubscriptionsPage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+
+  const rows = workspace.subscriptions;
   const unused = rows.filter((r) => r.status === "unused");
 
   return (
@@ -34,7 +39,7 @@ export default async function SubscriptionsPage() {
         />
       )}
 
-      <div className="overflow-x-auto glass-app rounded-2xl">
+      <div className="glass-app overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-[0.12em] text-muted">
             <tr>

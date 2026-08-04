@@ -1,19 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import type { Recommendation } from "@/lib/ops";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
+import type { Recommendation } from "@/lib/ops";
+import { useState } from "react";
 
 export function RecommendationActions({ recommendation }: { recommendation: Recommendation }) {
-  const [status, setStatus] = useState(recommendation.status);
+  const { updateAndSave } = useWorkspace();
   const [message, setMessage] = useState<string | null>(null);
+  const status = recommendation.status;
 
   function act(next: "approved" | "dismissed") {
-    setStatus(next);
+    updateAndSave((prev) => ({
+      ...prev,
+      recommendations: prev.recommendations.map((r) =>
+        r.id === recommendation.id ? { ...r, status: next } : r,
+      ),
+    }));
     setMessage(
       next === "approved"
-        ? "Marked approved (demo only — no live change)."
-        : "Dismissed (demo only — no live change).",
+        ? "Approved and saved to this browser’s workspace."
+        : "Dismissed and saved to this browser’s workspace.",
     );
   }
 

@@ -1,12 +1,17 @@
+"use client";
+
 import { DualSeriesChart } from "@/components/app/Sparkline";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
-import { opsSource } from "@/lib/ops";
 import Link from "next/link";
 
-export default async function ForecastPage() {
-  const forecast = await opsSource.getForecast();
-  const recs = await opsSource.getRecommendations();
+export default function ForecastPage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+
+  const forecast = workspace.forecast;
+  const recs = workspace.recommendations;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">

@@ -1,9 +1,12 @@
+"use client";
+
 import { AssistantClient } from "@/components/app/AssistantClient";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
-import { opsSource } from "@/lib/ops";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 
-export default async function AssistantPage() {
-  const presets = await opsSource.getAssistantPresets();
+export default function AssistantPage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -17,7 +20,7 @@ export default async function AssistantPage() {
         </div>
         <SampleDataBadge />
       </header>
-      <AssistantClient presets={presets} />
+      <AssistantClient presets={workspace.assistantPresets} />
     </div>
   );
 }

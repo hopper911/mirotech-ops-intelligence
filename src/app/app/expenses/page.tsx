@@ -1,10 +1,17 @@
+"use client";
+
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { Sparkline } from "@/components/app/Sparkline";
+import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
-import { opsSource } from "@/lib/ops";
 
-export default async function ExpensesPage() {
-  const { vendors, monthlyTotal, budgetTotal } = await opsSource.getExpenses();
+export default function ExpensesPage() {
+  const { workspace, hydrated } = useWorkspace();
+  if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
+
+  const vendors = workspace.vendors;
+  const monthlyTotal = vendors.reduce((s, v) => s + v.monthly, 0);
+  const budgetTotal = vendors.reduce((s, v) => s + v.budget, 0);
   const variance = monthlyTotal - budgetTotal;
 
   return (
@@ -38,7 +45,7 @@ export default async function ExpensesPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto glass-app rounded-2xl">
+      <div className="glass-app overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-[0.12em] text-muted">
             <tr>
@@ -58,7 +65,7 @@ export default async function ExpensesPage() {
                 <td className="px-4 py-3 text-muted">{v.team}</td>
                 <td className="px-4 py-3">{formatUsd(v.monthly)}</td>
                 <td className="px-4 py-3 text-muted">{formatUsd(v.budget)}</td>
-                <td className="px-4 py-3 w-36">
+                <td className="w-36 px-4 py-3">
                   <Sparkline series={v.trend} className="h-8 w-28" />
                 </td>
               </tr>
