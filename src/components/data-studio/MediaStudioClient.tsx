@@ -90,7 +90,7 @@ export function MediaStudioClient() {
               }}
             />
           </div>
-          {media.backgroundVideoUrl ? (
+          {media.backgroundVideoUrl && isDisplayableMediaUrl(media.backgroundVideoUrl) ? (
             <video
               key={media.backgroundVideoUrl.slice(0, 64)}
               className="mt-4 max-h-48 w-full rounded-xl object-cover"

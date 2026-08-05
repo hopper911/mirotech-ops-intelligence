@@ -1,6 +1,7 @@
 "use client";
 
 import { Logo } from "@/components/brand/Logo";
+import { SignalDots } from "@/components/brand/SignalDots";
 import { BRAND } from "@/lib/brand";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -33,32 +34,32 @@ function LoginForm() {
       setError("Invalid credentials. Use the demo account below.");
       return;
     }
-    router.push(callbackUrl);
+    const safeCallback =
+      callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/app";
+    router.push(safeCallback);
     router.refresh();
   }
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-4">
       <label className="block">
-        <span className="text-xs uppercase tracking-[0.14em] text-muted">
-          Email
-        </span>
+        <span className="text-xs uppercase tracking-[0.14em] text-muted">Email</span>
         <input
           name="email"
           type="email"
           required
+          autoComplete="username"
           defaultValue={BRAND.demoCredentials.email}
           className="mt-1.5 w-full rounded-xl border border-border bg-navy/60 px-3 py-2.5 text-sm text-white outline-none ring-cyan focus:ring-2"
         />
       </label>
       <label className="block">
-        <span className="text-xs uppercase tracking-[0.14em] text-muted">
-          Password
-        </span>
+        <span className="text-xs uppercase tracking-[0.14em] text-muted">Password</span>
         <input
           name="password"
           type="password"
           required
+          autoComplete="current-password"
           defaultValue={BRAND.demoCredentials.password}
           className="mt-1.5 w-full rounded-xl border border-border bg-navy/60 px-3 py-2.5 text-sm text-white outline-none ring-cyan focus:ring-2"
         />
@@ -80,13 +81,17 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="theme-app grid-atmosphere flex min-h-screen flex-col items-center justify-center px-6 py-12">
-      <div className="glass-strong animate-fade-up w-full max-w-md rounded-3xl p-8">
+    <div className="theme-app grid-atmosphere relative flex min-h-screen flex-col items-center justify-center px-6 py-12">
+      <SignalDots
+        variant="orbit"
+        className="pointer-events-none absolute right-[8%] top-[12%] h-32 w-32 opacity-50"
+        interactive={false}
+      />
+      <div className="glass-strong animate-fade-up relative w-full max-w-md rounded-3xl p-8">
         <Logo variant="light" size="md" href="/" />
         <h1 className="mt-8 text-2xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-muted">
-          Client demo sign-in. Operators explore sample ops data in a read-only
-          workspace.
+          Client demo sign-in. Operators explore sample ops data in a read-only workspace.
         </p>
         <Suspense fallback={<p className="mt-8 text-sm text-muted">Loading…</p>}>
           <LoginForm />

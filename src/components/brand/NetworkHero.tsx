@@ -30,8 +30,8 @@ export function NetworkHero({ className = "" }: { className?: string }) {
   ];
 
   return (
-    <div className={`pointer-events-none relative ${className}`} aria-hidden>
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.22),transparent_65%)]" />
+    <div className={`relative ${className}`} aria-hidden>
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.22),transparent_65%)]" />
       <svg viewBox="0 0 360 260" className="h-full w-full">
         <defs>
           <filter id={`nodeGlow-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
@@ -92,8 +92,11 @@ export function NetworkHero({ className = "" }: { className?: string }) {
             r={n.r}
             fill={n.fill}
             filter={`url(#nodeGlow-${uid})`}
+            className="cursor-pointer"
             initial={reduce ? false : { scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            whileHover={reduce ? undefined : { scale: 1.55 }}
+            whileTap={reduce ? undefined : { scale: 0.9 }}
             transition={{
               type: "spring",
               stiffness: 260,

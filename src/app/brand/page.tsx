@@ -1,4 +1,5 @@
 import { Logo } from "@/components/brand/Logo";
+import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { BRAND } from "@/lib/brand";
 import Image from "next/image";
@@ -14,7 +15,12 @@ const viz = [
 export default function BrandGuidelinesPage() {
   return (
     <MarketingShell>
-      <main className="mx-auto w-full max-w-6xl px-6 py-12">
+      <main className="relative mx-auto w-full max-w-6xl px-6 py-12">
+        <SignalDots
+          variant="trail"
+          className="absolute bottom-8 right-4 hidden h-36 w-36 opacity-70 lg:block"
+        />
+
         <p className="brand-sub text-[11px] text-cyan">Brand system</p>
         <h1 className="mt-3 text-4xl font-semibold text-white">Compact guidelines</h1>
         <p className="mt-3 max-w-2xl text-sm text-muted">

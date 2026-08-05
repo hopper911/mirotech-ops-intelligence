@@ -62,7 +62,7 @@ export function DataStudioClient() {
   const [raw, setRaw] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const rawSynced = useMemo(() => exportJson(), [exportJson, workspace]);
+  const rawSynced = useMemo(() => exportJson(), [exportJson]);
 
   function flash(msg: string) {
     setMessage(msg);

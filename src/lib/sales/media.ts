@@ -316,12 +316,22 @@ export function readFileAsDataUrl(file: File, maxBytes: number): Promise<string>
 }
 
 export function isDisplayableMediaUrl(url?: string): boolean {
-  if (!url) return false;
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed.length > 8_000_000) return false;
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith("javascript:") ||
+    lower.startsWith("vbscript:") ||
+    lower.startsWith("data:text/") ||
+    lower.startsWith("data:application/")
+  ) {
+    return false;
+  }
   return (
-    url.startsWith("data:image/") ||
-    url.startsWith("data:video/") ||
-    url.startsWith("https://") ||
-    url.startsWith("http://") ||
-    url.startsWith("/")
+    lower.startsWith("data:image/") ||
+    lower.startsWith("data:video/") ||
+    lower.startsWith("https://") ||
+    trimmed.startsWith("/")
   );
 }

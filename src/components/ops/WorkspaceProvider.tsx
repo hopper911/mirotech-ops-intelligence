@@ -49,15 +49,22 @@ export function WorkspaceProvider({
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    if (canEdit) {
-      const stored = loadWorkspaceFromStorage();
-      if (stored) {
-        setWorkspaceState(stored);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (canEdit) {
+        const stored = loadWorkspaceFromStorage();
+        if (stored) {
+          setWorkspaceState(stored);
+        }
+      } else {
+        setWorkspaceState(getDefaultWorkspace());
       }
-    } else {
-      setWorkspaceState(getDefaultWorkspace());
-    }
-    setHydrated(true);
+      setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [canEdit]);
 
   const setWorkspace = useCallback(

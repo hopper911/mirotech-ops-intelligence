@@ -53,7 +53,7 @@ export default function HomePage() {
   return (
     <MarketingShell>
       <main className="relative mx-auto w-full max-w-6xl px-6 pb-24 pt-10 lg:pt-14">
-        <div className="node-rail pointer-events-none absolute inset-x-6 top-24 h-40" aria-hidden />
+        <div className="node-rail-pulse pointer-events-none absolute inset-x-6 top-24 h-40" aria-hidden />
 
         <HomeHero />
 

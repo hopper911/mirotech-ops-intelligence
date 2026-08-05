@@ -1,3 +1,4 @@
+import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -31,7 +32,9 @@ const tiers = [
 export default function PricingPage() {
   return (
     <MarketingShell>
-      <main className="mx-auto w-full max-w-6xl px-6 py-12">
+      <main className="relative mx-auto w-full max-w-6xl overflow-hidden px-6 py-12">
+        <SignalDots variant="corner" className="absolute -right-6 -top-4 h-52 w-52 opacity-80" />
+
         <Reveal>
           <p className="brand-sub text-[11px] text-cyan">Pricing</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">Simple plans for ops clarity</h1>
@@ -40,7 +43,7 @@ export default function PricingPage() {
           </p>
         </Reveal>
 
-        <RevealStagger className="mt-10 grid gap-4 lg:grid-cols-3">
+        <RevealStagger className="relative mt-10 grid gap-4 lg:grid-cols-3">
           {tiers.map((t) => (
             <RevealItem key={t.name}>
               <GlassCard

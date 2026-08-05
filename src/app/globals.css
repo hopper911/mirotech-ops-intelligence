@@ -253,6 +253,33 @@ body {
   mask-image: linear-gradient(90deg, transparent, black 20%, black 80%, transparent);
 }
 
+.node-rail-pulse {
+  background-image:
+    radial-gradient(circle, rgba(34, 211, 238, 0.7) 1.3px, transparent 1.5px),
+    radial-gradient(circle, rgba(125, 220, 101, 0.45) 1px, transparent 1.2px);
+  background-size: 32px 32px, 48px 48px;
+  background-position: 0 0, 12px 8px;
+  opacity: 0.35;
+  mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+  animation: node-rail-blink 3.6s ease-in-out infinite;
+}
+
+@keyframes node-rail-blink {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+  50% {
+    opacity: 0.48;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-rail-pulse {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glass-lift,
   .btn-specular,

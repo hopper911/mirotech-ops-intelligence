@@ -6,6 +6,7 @@ import {
   IconSystems,
 } from "@/components/brand/BrandIcons";
 import { SignalDivider } from "@/components/brand/NetworkHero";
+import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -71,7 +72,11 @@ const screens: {
 export default function ProductPage() {
   return (
     <MarketingShell>
-      <main className="mx-auto w-full max-w-6xl px-6 py-12">
+      <main className="relative mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="pointer-events-none absolute left-0 top-16 hidden h-[28rem] w-16 md:block md:pointer-events-auto lg:left-[-1.5rem]">
+          <SignalDots variant="spine" className="h-full w-full" />
+        </div>
+
         <Reveal>
           <p className="brand-sub text-[11px] text-cyan">Product</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">
@@ -118,7 +123,7 @@ export default function ProductPage() {
               href="/app/onboarding"
               className="mt-3 inline-block text-sm text-green hover:underline"
             >
-              Preview onboarding (after sign-in) →
+              Preview onboarding →
             </Link>
           </GlassCard>
         </Reveal>

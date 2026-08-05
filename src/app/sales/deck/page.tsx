@@ -1,7 +1,9 @@
 "use client";
 
+import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
+import { isDisplayableMediaUrl } from "@/lib/sales/media";
 import { useState } from "react";
 
 export default function DeckPage() {
@@ -12,8 +14,14 @@ export default function DeckPage() {
 
   return (
     <MarketingShell>
-      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-12">
-        <div className="flex items-center justify-between gap-3">
+      <main className="relative mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-12">
+        <SignalDots
+          variant="corner"
+          className="absolute -left-2 top-6 h-28 w-28 opacity-60"
+          interactive={false}
+        />
+
+        <div className="relative flex items-center justify-between gap-3">
           <div>
             <p className="brand-sub text-[11px] text-cyan">Sales deck</p>
             <h1 className="mt-2 text-2xl font-semibold text-white">10-slide presentation</h1>
@@ -26,13 +34,13 @@ export default function DeckPage() {
         {!hydrated ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : (
-          <div className="glass-strong grid min-h-[22rem] overflow-hidden rounded-3xl lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="glass-strong relative grid min-h-[22rem] overflow-hidden rounded-3xl lg:grid-cols-[1.1fr_0.9fr]">
             <div className="flex flex-col justify-center p-8 sm:p-10">
               <h2 className="text-3xl font-semibold text-white">{slide.title}</h2>
               <p className="mt-4 max-w-xl text-lg text-muted">{slide.body}</p>
             </div>
             <div className="relative min-h-[14rem] border-t border-white/10 bg-navy/40 lg:border-l lg:border-t-0">
-              {slide.imageDataUrl ? (
+              {isDisplayableMediaUrl(slide.imageDataUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={slide.imageDataUrl}

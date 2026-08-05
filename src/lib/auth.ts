@@ -10,6 +10,16 @@ function resolveAdminCredentials() {
   };
 }
 
+/** Constant-time string compare (Edge-safe; no Node crypto). */
+function safeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) {
+    out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return out === 0;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -23,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials?.password ?? "");
         const admin = resolveAdminCredentials();
 
-        if (email === admin.email && password === admin.password) {
+        if (safeEqual(email, admin.email) && safeEqual(password, admin.password)) {
           return {
             id: "demo-admin",
             name: "Demo Admin",
@@ -33,8 +43,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (
-          email === BRAND.demoCredentials.email &&
-          password === BRAND.demoCredentials.password
+          safeEqual(email, BRAND.demoCredentials.email) &&
+          safeEqual(password, BRAND.demoCredentials.password)
         ) {
           return {
             id: "demo-client",

@@ -1,3 +1,4 @@
+import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -6,7 +7,11 @@ import Link from "next/link";
 export default function ConceptPage() {
   return (
     <MarketingShell>
-      <main className="mx-auto w-full max-w-3xl px-6 py-12">
+      <main className="relative mx-auto w-full max-w-3xl px-6 py-12">
+        <div className="mb-8 flex justify-center">
+          <SignalDots variant="orbit" className="h-40 w-40" />
+        </div>
+
         <Reveal>
           <p className="brand-sub text-[11px] text-cyan">Case study · credibility</p>
           <h1 className="mt-3 text-4xl font-semibold text-white">

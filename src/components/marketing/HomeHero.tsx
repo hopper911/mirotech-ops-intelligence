@@ -5,24 +5,26 @@ import { Reveal } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { BRAND } from "@/lib/brand";
+import { isDisplayableMediaUrl } from "@/lib/sales/media";
 import Link from "next/link";
 
 export function HomeHero() {
   const { media } = useSalesMedia();
   const videoUrl = media.backgroundVideoUrl?.trim();
+  const safeVideo = isDisplayableMediaUrl(videoUrl) ? videoUrl : "";
 
   return (
     <section className="relative overflow-hidden rounded-3xl">
-      {videoUrl ? (
+      {safeVideo ? (
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl">
           <video
-            key={videoUrl.slice(0, 64)}
+            key={safeVideo.slice(0, 64)}
             className="h-full w-full object-cover opacity-35"
             autoPlay
             muted
             loop
             playsInline
-            src={videoUrl}
+            src={safeVideo}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/85 to-navy/70" />
         </div>
