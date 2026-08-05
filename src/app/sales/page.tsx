@@ -8,7 +8,7 @@ const items = [
   { href: "/sales/deck", title: "10-slide sales deck", body: "Interactive presentation for demos and reviews." },
   { href: "/sales/brief", title: "Solution brief", body: "Problem, approach, outcomes for stakeholders." },
   { href: "/sales/email", title: "Launch email", body: "HTML preview of a product launch message." },
-  { href: "/sales/ads", title: "LinkedIn ads", body: "Static ad and carousel mock frames." },
+  { href: "/sales/ads", title: "LinkedIn ads", body: "Three ad mocks plus a four-side carousel with optional images." },
 ];
 
 export default function SalesHubPage() {

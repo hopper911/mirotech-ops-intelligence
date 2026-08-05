@@ -22,7 +22,18 @@ npm install
 npm run dev
 ```
 
-Demo login: `demo@mirotech.io` / `ops-demo`
+Demo login: `demo@mirotech.io` / `ops-demo`  
+Admin (Data Studio + sales media uploads): `admin@mirotech.io` / `12345mirotech`
+
+## Sales media (admin)
+
+When signed in as admin, you can:
+
+- Upload images on each **sales deck** slide (`/sales/deck`)
+- Upload images for **three LinkedIn ads** and the **four-side carousel** (`/sales/ads`)
+- Set a **homepage background video** via URL or short upload (≤4MB) on `/`
+
+Media is stored in browser localStorage (`mirotech.sales.media`). Clients never see upload controls.
 
 ## Product routes (sign-in required)
 

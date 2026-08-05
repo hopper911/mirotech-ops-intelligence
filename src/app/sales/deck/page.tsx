@@ -1,24 +1,15 @@
 "use client";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { ImageUploadButton } from "@/components/sales/MediaUpload";
+import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { useState } from "react";
 
-const slides = [
-  { title: "Mirotech Ops Intelligence", body: "See what your operations are really telling you." },
-  { title: "The problem", body: "Dozens of tech services. No single view of cost, utilization, or automation health." },
-  { title: "Who feels it", body: "Founders/CFOs, Ops managers, and technical leads each lack defensible signal." },
-  { title: "The workspace", body: "Cloud, SaaS, AI APIs, expenses, and automation — unified." },
-  { title: "Executive clarity", body: "Spend, savings, risk, and health on one dashboard." },
-  { title: "Recommendations", body: "Evidence-backed actions with savings estimates and risk." },
-  { title: "Forecast", body: "Current vs optimized path with confidence notes." },
-  { title: "Assistant", body: "Plain-language questions with sourced answers." },
-  { title: "Sample impact", body: "Northline Commerce: ~$191k annual savings opportunity (sample)." },
-  { title: "Next step", body: "Open the interactive demo and walk an approval together." },
-];
-
 export default function DeckPage() {
+  const { media, hydrated, isAdmin, update } = useSalesMedia();
   const [i, setI] = useState(0);
-  const slide = slides[i];
+  const slides = media.slides;
+  const slide = slides[i] ?? slides[0];
 
   return (
     <MarketingShell>
@@ -33,10 +24,52 @@ export default function DeckPage() {
           </p>
         </div>
 
-        <div className="glass-strong flex min-h-[22rem] flex-col justify-center rounded-3xl p-10">
-          <h2 className="text-3xl font-semibold text-white">{slide.title}</h2>
-          <p className="mt-4 max-w-xl text-lg text-muted">{slide.body}</p>
-        </div>
+        {!hydrated ? (
+          <p className="text-sm text-muted">Loading…</p>
+        ) : (
+          <div className="glass-strong grid min-h-[22rem] overflow-hidden rounded-3xl lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="flex flex-col justify-center p-8 sm:p-10">
+              <h2 className="text-3xl font-semibold text-white">{slide.title}</h2>
+              <p className="mt-4 max-w-xl text-lg text-muted">{slide.body}</p>
+              {isAdmin ? (
+                <div className="mt-6">
+                  <ImageUploadButton
+                    label="Upload slide image"
+                    hasImage={Boolean(slide.imageDataUrl)}
+                    onUploaded={(url) =>
+                      update((prev) => {
+                        const next = [...prev.slides];
+                        next[i] = { ...next[i], imageDataUrl: url };
+                        return { ...prev, slides: next };
+                      })
+                    }
+                    onClear={() =>
+                      update((prev) => {
+                        const next = [...prev.slides];
+                        next[i] = { ...next[i], imageDataUrl: undefined };
+                        return { ...prev, slides: next };
+                      })
+                    }
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div className="relative min-h-[14rem] border-t border-white/10 bg-navy/40 lg:border-l lg:border-t-0">
+              {slide.imageDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={slide.imageDataUrl}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full min-h-[14rem] items-center justify-center p-6 text-center text-xs text-muted">
+                  {isAdmin ? "Upload an image for this slide" : "Slide visual"}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2">
           <button

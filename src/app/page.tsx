@@ -5,11 +5,11 @@ import {
   IconPerformance,
   IconSystems,
 } from "@/components/brand/BrandIcons";
-import { NetworkHero, SignalDivider } from "@/components/brand/NetworkHero";
+import { SignalDivider } from "@/components/brand/NetworkHero";
+import { HomeHero } from "@/components/marketing/HomeHero";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import type { ComponentType } from "react";
 
@@ -55,61 +55,7 @@ export default function HomePage() {
       <main className="relative mx-auto w-full max-w-6xl px-6 pb-24 pt-10 lg:pt-14">
         <div className="node-rail pointer-events-none absolute inset-x-6 top-24 h-40" aria-hidden />
 
-        <section className="relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="max-w-xl">
-            <Reveal delay={0.05}>
-              <p className="brand-sub text-[11px] text-cyan">B2B SaaS · Ops Intelligence</p>
-            </Reveal>
-            <Reveal delay={0.12}>
-              <h1 className="brand-display mt-4 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-                <span className="text-signal">Mirotech</span>
-              </h1>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted sm:text-xl">
-                {BRAND.taglineParts.before}
-                <span className="font-semibold text-green">{BRAND.taglineParts.emphasis}</span>
-                {BRAND.taglineParts.after}
-              </p>
-            </Reveal>
-            <Reveal delay={0.28}>
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">
-                Growing companies run dozens of technology services but lack one clear view of cost,
-                utilization, automation health, and optimization opportunities. Mirotech unifies cloud,
-                software subscriptions, AI API usage, and automation performance in a single workspace.
-              </p>
-            </Reveal>
-            <Reveal delay={0.36}>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/login"
-                  className="btn-specular rounded-full bg-green px-6 py-3 text-sm font-semibold text-navy"
-                >
-                  Enter the demo
-                </Link>
-                <Link
-                  href="/product"
-                  className="btn-ghost-glass rounded-full px-6 py-3 text-sm text-white"
-                >
-                  Explore product
-                </Link>
-              </div>
-              <p className="mt-4 text-xs text-cyan">
-                Sample concept · Northline Commerce workspace · not live billing data
-              </p>
-            </Reveal>
-          </div>
-
-          <Reveal delay={0.25} className="relative hidden min-h-[280px] lg:block">
-            <GlassCard variant="strong" className="relative overflow-hidden rounded-3xl p-4">
-              <NetworkHero className="h-[280px] w-full" />
-              <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-muted">
-                <span>Signal graph</span>
-                <span className="text-cyan">Live motif · brand system</span>
-              </div>
-            </GlassCard>
-          </Reveal>
-        </section>
+        <HomeHero />
 
         <SignalDivider />
 
