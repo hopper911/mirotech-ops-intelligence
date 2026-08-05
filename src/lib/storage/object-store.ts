@@ -1,4 +1,4 @@
-import { del, list, put } from "@vercel/blob";
+import { del, get, list, put } from "@vercel/blob";
 import {
   isR2Configured,
   r2DeleteObject,
@@ -28,6 +28,8 @@ export async function putPublicObject(options: {
   key: string;
   body: Buffer | Uint8Array;
   contentType: string;
+  /** Short cache for mutable config; images can keep default CDN caching. */
+  cacheControlMaxAge?: number;
 }): Promise<{ key: string; url: string; backend: StorageBackend }> {
   assertStorageConfigured();
   const key = options.key.replace(/^\/+/, "");
@@ -47,6 +49,8 @@ export async function putPublicObject(options: {
     contentType: options.contentType,
     addRandomSuffix: false,
     allowOverwrite: true,
+    // Images can CDN-cache; mutable config should pass a low cacheControlMaxAge.
+    cacheControlMaxAge: options.cacheControlMaxAge ?? 60 * 60 * 24 * 30,
   });
   return { key, url: blob.url, backend: "blob" };
 }
@@ -61,22 +65,26 @@ export async function getObjectText(key: string): Promise<string | null> {
     return buf ? buf.toString("utf8") : null;
   }
 
-  const { blobs } = await list({ prefix: cleanKey, limit: 50 });
-  const matches = blobs
-    .filter((b) => b.pathname === cleanKey)
-    .sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt));
-  const match = matches[0];
-  if (!match) return null;
-  const res = await fetch(match.url, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.text();
+  // Read from origin (not CDN) so overwrites are visible immediately.
+  const result = await get(cleanKey, { access: "public", useCache: false });
+  if (!result || result.statusCode !== 200 || !result.stream) return null;
+
+  const chunks: Buffer[] = [];
+  const reader = result.stream.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 export async function putObjectText(key: string, text: string): Promise<{ url: string }> {
   const result = await putPublicObject({
     key,
     body: Buffer.from(text, "utf8"),
-    contentType: "application/json",
+    contentType: "application/json; charset=utf-8",
+    cacheControlMaxAge: 60,
   });
   return { url: result.url };
 }

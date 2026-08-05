@@ -16,18 +16,16 @@ function pickCrop(saved?: { imageCrop?: Partial<ImageCrop> }): { imageCrop?: Ima
 
 function mergeConfig(parsed: Partial<SalesMedia>): SalesMedia {
   const defaults = cloneSalesMedia(DEFAULT_SALES_MEDIA);
-  const slides =
-    parsed.slides?.length === defaults.slides.length
-      ? defaults.slides.map((slide, i) => {
-          const saved = parsed.slides![i];
-          return {
-            title: saved?.title || slide.title,
-            body: saved?.body || slide.body,
-            ...(saved?.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
-            ...pickCrop(saved),
-          };
-        })
-      : defaults.slides;
+  const slides = defaults.slides.map((slide, i) => {
+    const saved = parsed.slides?.[i];
+    if (!saved) return slide;
+    return {
+      title: saved.title || slide.title,
+      body: saved.body || slide.body,
+      ...(saved.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+      ...pickCrop(saved),
+    };
+  });
 
   const linkedInAds = defaults.linkedInAds.map((ad, i) => {
     const saved = parsed.linkedInAds?.find((a) => a.id === ad.id) ?? parsed.linkedInAds?.[i];
@@ -62,12 +60,13 @@ function mergeConfig(parsed: Partial<SalesMedia>): SalesMedia {
 }
 
 export async function loadSalesMediaConfig(): Promise<SalesMedia> {
+  const raw = await getObjectText(SALES_MEDIA_CONFIG_KEY);
+  if (!raw) return cloneSalesMedia(DEFAULT_SALES_MEDIA);
   try {
-    const raw = await getObjectText(SALES_MEDIA_CONFIG_KEY);
-    if (!raw) return cloneSalesMedia(DEFAULT_SALES_MEDIA);
     return mergeConfig(JSON.parse(raw) as Partial<SalesMedia>);
-  } catch {
-    return cloneSalesMedia(DEFAULT_SALES_MEDIA);
+  } catch (err) {
+    console.error("[sales-media] invalid config JSON", err);
+    throw err;
   }
 }
 

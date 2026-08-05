@@ -12,7 +12,7 @@ type Options = {
 };
 
 async function fetchMedia(): Promise<SalesMedia> {
-  const res = await fetch("/api/sales-media", { cache: "no-store" });
+  const res = await fetch(`/api/sales-media?t=${Date.now()}`, { cache: "no-store" });
   if (!res.ok) return cloneSalesMedia(DEFAULT_SALES_MEDIA);
   return (await res.json()) as SalesMedia;
 }
@@ -23,7 +23,7 @@ export function useSalesMedia(options: Options = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mediaRef = useRef(media);
-  const savingRef = useRef(false);
+  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
     mediaRef.current = media;
@@ -34,12 +34,14 @@ export function useSalesMedia(options: Options = {}) {
     fetchMedia()
       .then((loaded) => {
         if (cancelled) return;
-        setMedia(cloneSalesMedia(loaded));
-        mediaRef.current = loaded;
+        const next = cloneSalesMedia(loaded);
+        setMedia(next);
+        mediaRef.current = next;
         setHydrated(true);
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
+        console.error("[sales-media] load failed", err);
         setMedia(cloneSalesMedia(DEFAULT_SALES_MEDIA));
         setHydrated(true);
       });
@@ -55,19 +57,14 @@ export function useSalesMedia(options: Options = {}) {
         setError(message);
         throw new Error(message);
       }
-      if (savingRef.current) {
-        const message = "Another save is in progress — try again in a moment.";
-        setError(message);
-        throw new Error(message);
-      }
 
-      const previous = mediaRef.current;
-      const next = cloneSalesMedia(updater(previous));
-      setMedia(next);
-      mediaRef.current = next;
-      savingRef.current = true;
+      // Serialize writes so rapid uploads/crop changes cannot overwrite each other.
+      const run = queueRef.current.then(async () => {
+        const previous = mediaRef.current;
+        const next = cloneSalesMedia(updater(previous));
+        setMedia(next);
+        mediaRef.current = next;
 
-      try {
         const res = await fetch("/api/sales-media", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -76,30 +73,28 @@ export function useSalesMedia(options: Options = {}) {
         });
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || "Could not save media.");
+          setMedia(previous);
+          mediaRef.current = previous;
+          const message = data.error || "Could not save media.";
+          setError(message);
+          throw new Error(message);
         }
         const saved = cloneSalesMedia(data as SalesMedia);
         setMedia(saved);
         mediaRef.current = saved;
         setError(null);
         return saved;
-      } catch (err) {
-        setMedia(previous);
-        mediaRef.current = previous;
-        const message =
-          err instanceof Error ? err.message : "Could not save media.";
-        setError(message);
-        throw new Error(message);
-      } finally {
-        savingRef.current = false;
-      }
+      });
+
+      queueRef.current = run.catch(() => undefined);
+      return run;
     },
     [canEdit],
   );
 
   const reset = useCallback(async () => {
     if (!canEdit) return;
-    try {
+    const run = queueRef.current.then(async () => {
       const res = await fetch("/api/sales-media", {
         method: "DELETE",
         credentials: "same-origin",
@@ -110,6 +105,10 @@ export function useSalesMedia(options: Options = {}) {
       setMedia(empty);
       mediaRef.current = empty;
       setError(null);
+    });
+    queueRef.current = run.catch(() => undefined);
+    try {
+      await run;
     } catch {
       setError("Could not reset media.");
     }
