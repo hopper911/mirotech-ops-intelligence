@@ -3,6 +3,7 @@
 import { Logo } from "@/components/brand/Logo";
 import { SignalDots } from "@/components/brand/SignalDots";
 import { BRAND } from "@/lib/brand";
+import { safeInternalPath } from "@/lib/safe-path";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,9 +35,7 @@ function LoginForm() {
       setError("Invalid credentials. Use the demo account below.");
       return;
     }
-    const safeCallback =
-      callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/app";
-    router.push(safeCallback);
+    router.push(safeInternalPath(callbackUrl, "/app"));
     router.refresh();
   }
 

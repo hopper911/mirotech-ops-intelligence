@@ -38,7 +38,16 @@ export function ImageUploadButton({
             if (file.size > IMAGE_INPUT_MAX) {
               throw new Error("File too large (max 8MB).");
             }
+            if (file.type && !file.type.startsWith("image/")) {
+              throw new Error("Please choose a JPEG, PNG, WebP, or GIF.");
+            }
+            if (file.type === "image/svg+xml") {
+              throw new Error("SVG uploads are not allowed.");
+            }
             const url = await compressImageFile(file);
+            if (!url.startsWith("data:image/")) {
+              throw new Error("Could not process that image.");
+            }
             await onUploaded(url);
           } catch (err) {
             setError(err instanceof Error ? err.message : "Upload failed");

@@ -1,7 +1,6 @@
 export const SALES_MEDIA_KEY = "mirotech.sales.media";
-const IDB_NAME = "mirotech-sales-media-v3";
+const IDB_NAME = "mirotech-sales-media-v4";
 const IDB_STORE = "media";
-const IDB_BLOBS = "blobs";
 const IDB_KEY = "current";
 const IDB_VERSION = 1;
 
@@ -117,35 +116,36 @@ function mergeWithDefaults(parsed: Partial<SalesMedia>): SalesMedia {
   const defaults = cloneSalesMedia(DEFAULT_SALES_MEDIA);
   const slides =
     parsed.slides?.length === defaults.slides.length
-      ? defaults.slides.map((slide, i) => ({
-          title: parsed.slides![i]?.title || slide.title,
-          body: parsed.slides![i]?.body || slide.body,
-          imageDataUrl: parsed.slides![i]?.imageDataUrl,
-        }))
+      ? defaults.slides.map((slide, i) => {
+          const saved = parsed.slides![i];
+          return {
+            title: saved?.title || slide.title,
+            body: saved?.body || slide.body,
+            ...(saved?.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+          };
+        })
       : defaults.slides;
 
   const linkedInAds = defaults.linkedInAds.map((ad, i) => {
     const saved = parsed.linkedInAds?.find((a) => a.id === ad.id) ?? parsed.linkedInAds?.[i];
-    return saved
-      ? {
-          id: ad.id,
-          headline: saved.headline || ad.headline,
-          body: saved.body || ad.body,
-          cta: saved.cta || ad.cta,
-          imageDataUrl: saved.imageDataUrl,
-        }
-      : ad;
+    if (!saved) return ad;
+    return {
+      id: ad.id,
+      headline: saved.headline || ad.headline,
+      body: saved.body || ad.body,
+      cta: saved.cta || ad.cta,
+      ...(saved.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+    };
   });
 
   const carousel = defaults.carousel.map((frame, i) => {
     const saved = parsed.carousel?.find((c) => c.id === frame.id) ?? parsed.carousel?.[i];
-    return saved
-      ? {
-          id: frame.id,
-          line: saved.line || frame.line,
-          imageDataUrl: saved.imageDataUrl,
-        }
-      : frame;
+    if (!saved) return frame;
+    return {
+      id: frame.id,
+      line: saved.line || frame.line,
+      ...(saved.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+    };
   });
 
   return {
@@ -158,179 +158,53 @@ function mergeWithDefaults(parsed: Partial<SalesMedia>): SalesMedia {
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("IndexedDB is not available in this browser."));
+      return;
+    }
     const req = indexedDB.open(IDB_NAME, IDB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
-      if (!db.objectStoreNames.contains(IDB_BLOBS)) db.createObjectStore(IDB_BLOBS);
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE);
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error ?? new Error("IndexedDB open failed"));
+    req.onblocked = () => reject(new Error("IndexedDB blocked — close other tabs and retry."));
   });
 }
 
-function dataUrlToBlob(dataUrl: string): Blob {
-  const [header, base64] = dataUrl.split(",");
-  const mime = /data:([^;]+)/.exec(header ?? "")?.[1] ?? "application/octet-stream";
-  const binary = atob(base64 ?? "");
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Could not read stored image."));
-    reader.readAsDataURL(blob);
-  });
-}
-
-type MetaRecord = {
-  slides: { title: string; body: string }[];
-  linkedInAds: { id: string; headline: string; body: string; cta: string }[];
-  carousel: { id: string; line: string }[];
-  backgroundVideoUrl: string;
-};
-
-/** All IDB requests are issued synchronously so the transaction stays alive. */
+/** Single-document put — no mid-transaction awaits or heavy conversion. */
 function idbGet(): Promise<SalesMedia | null> {
   return openDb().then(
     (db) =>
       new Promise((resolve, reject) => {
-        const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readonly");
-        const mediaStore = tx.objectStore(IDB_STORE);
-        const blobStore = tx.objectStore(IDB_BLOBS);
-
-        const metaReq = mediaStore.get(IDB_KEY);
-        // Issue every get in the same tick so the transaction does not auto-close.
-        const slideReqs = Array.from({ length: 10 }, (_, i) => blobStore.get(`slide:${i}`));
-        const adIds = ["ad-1", "ad-2", "ad-3"] as const;
-        const adReqs = Object.fromEntries(adIds.map((id) => [id, blobStore.get(`ad:${id}`)]));
-        const carIds = ["c1", "c2", "c3", "c4"] as const;
-        const carReqs = Object.fromEntries(carIds.map((id) => [id, blobStore.get(`carousel:${id}`)]));
-        const videoReq = blobStore.get("video");
-
-        tx.onerror = () => reject(tx.error ?? new Error("IndexedDB read failed"));
-
+        const tx = db.transaction(IDB_STORE, "readonly");
+        const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
         tx.oncomplete = () => {
-          const meta = metaReq.result as MetaRecord | undefined;
-          if (!meta) {
-            resolve(null);
-            return;
-          }
-
-          void (async () => {
-            try {
-              async function readStored(stored: unknown): Promise<string | undefined> {
-                if (stored instanceof Blob) return blobToDataUrl(stored);
-                if (typeof stored === "string" && stored.startsWith("data:")) return stored;
-                return undefined;
-              }
-
-              const slides = await Promise.all(
-                meta.slides.map(async (slide, i) => ({
-                  ...slide,
-                  imageDataUrl: await readStored(slideReqs[i]?.result),
-                })),
-              );
-
-              const linkedInAds = await Promise.all(
-                meta.linkedInAds.map(async (ad) => ({
-                  ...ad,
-                  imageDataUrl: await readStored(adReqs[ad.id]?.result),
-                })),
-              );
-
-              const carousel = await Promise.all(
-                meta.carousel.map(async (frame) => ({
-                  ...frame,
-                  imageDataUrl: await readStored(carReqs[frame.id]?.result),
-                })),
-              );
-
-              let backgroundVideoUrl = meta.backgroundVideoUrl || "";
-              const videoStored = videoReq.result;
-              if (videoStored instanceof Blob) {
-                backgroundVideoUrl = await blobToDataUrl(videoStored);
-              } else if (typeof videoStored === "string") {
-                backgroundVideoUrl = videoStored;
-              }
-
-              resolve(mergeWithDefaults({ slides, linkedInAds, carousel, backgroundVideoUrl }));
-            } catch (err) {
-              reject(err);
-            }
-          })();
+          const raw = req.result as Partial<SalesMedia> | undefined;
+          resolve(raw ? mergeWithDefaults(raw) : null);
         };
+        tx.onerror = () => reject(tx.error ?? new Error("IndexedDB read failed"));
       }),
   );
 }
 
 function idbSet(data: SalesMedia): Promise<void> {
+  const payload = cloneSalesMedia(data);
   return openDb().then(
     (db) =>
       new Promise((resolve, reject) => {
-        const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readwrite");
+        const tx = db.transaction(IDB_STORE, "readwrite");
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error ?? new Error("IndexedDB write failed"));
         tx.onabort = () =>
           reject(
             tx.error ??
-              new Error("Storage full or blocked. Try a smaller JPEG/PNG under 2MB."),
+              new Error("Storage full or blocked. Compress further or try a smaller image."),
           );
-
-        const mediaStore = tx.objectStore(IDB_STORE);
-        const blobStore = tx.objectStore(IDB_BLOBS);
-
-        const meta: MetaRecord = {
-          slides: data.slides.map(({ title, body }) => ({ title, body })),
-          linkedInAds: data.linkedInAds.map(({ id, headline, body, cta }) => ({
-            id,
-            headline,
-            body,
-            cta,
-          })),
-          carousel: data.carousel.map(({ id, line }) => ({ id, line })),
-          backgroundVideoUrl: data.backgroundVideoUrl?.startsWith("data:")
-            ? ""
-            : data.backgroundVideoUrl ?? "",
-        };
-        mediaStore.put(meta, IDB_KEY);
-
-        data.slides.forEach((slide, i) => {
-          const key = `slide:${i}`;
-          if (slide.imageDataUrl?.startsWith("data:")) {
-            blobStore.put(dataUrlToBlob(slide.imageDataUrl), key);
-          } else {
-            blobStore.delete(key);
-          }
-        });
-
-        data.linkedInAds.forEach((ad) => {
-          const key = `ad:${ad.id}`;
-          if (ad.imageDataUrl?.startsWith("data:")) {
-            blobStore.put(dataUrlToBlob(ad.imageDataUrl), key);
-          } else {
-            blobStore.delete(key);
-          }
-        });
-
-        data.carousel.forEach((frame) => {
-          const key = `carousel:${frame.id}`;
-          if (frame.imageDataUrl?.startsWith("data:")) {
-            blobStore.put(dataUrlToBlob(frame.imageDataUrl), key);
-          } else {
-            blobStore.delete(key);
-          }
-        });
-
-        if (data.backgroundVideoUrl?.startsWith("data:")) {
-          blobStore.put(dataUrlToBlob(data.backgroundVideoUrl), "video");
-        } else {
-          blobStore.delete("video");
-        }
+        tx.objectStore(IDB_STORE).put(payload, IDB_KEY);
       }),
   );
 }
@@ -340,11 +214,10 @@ function idbClear(): Promise<void> {
     .then(
       (db) =>
         new Promise<void>((resolve, reject) => {
-          const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readwrite");
+          const tx = db.transaction(IDB_STORE, "readwrite");
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error ?? new Error("IndexedDB clear failed"));
           tx.objectStore(IDB_STORE).clear();
-          tx.objectStore(IDB_BLOBS).clear();
         }),
     )
     .catch(() => undefined);
@@ -367,7 +240,7 @@ export async function loadSalesMediaAsync(): Promise<SalesMedia> {
     const fromIdb = await idbGet();
     if (fromIdb) return fromIdb;
   } catch {
-    /* fall through */
+    /* fall through to localStorage / defaults */
   }
 
   const legacy = loadSalesMedia();
@@ -381,7 +254,7 @@ export async function loadSalesMediaAsync(): Promise<SalesMedia> {
       await idbSet(legacy);
       localStorage.removeItem(SALES_MEDIA_KEY);
     } catch {
-      /* keep legacy */
+      /* keep legacy in localStorage until next save */
     }
   }
   return legacy;
@@ -405,33 +278,69 @@ export async function clearSalesMedia(): Promise<void> {
   }
 }
 
-/** Compress image to JPEG data URL. Falls back to raw FileReader. */
+function canvasToJpegDataUrl(
+  source: CanvasImageSource,
+  width: number,
+  height: number,
+  maxWidth: number,
+  quality: number,
+): string {
+  const scale = Math.min(1, maxWidth / Math.max(width, 1));
+  const w = Math.max(1, Math.round(width * scale));
+  const h = Math.max(1, Math.round(height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not process image.");
+  ctx.drawImage(source, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL("image/jpeg", quality);
+  if (!dataUrl.startsWith("data:image/")) throw new Error("Could not encode image.");
+  return dataUrl;
+}
+
+/** Compress image to JPEG data URL (keeps IndexedDB lean). */
 export async function compressImageFile(
   file: File,
-  maxWidth = 1600,
-  quality = 0.82,
+  maxWidth = 1200,
+  quality = 0.72,
 ): Promise<string> {
+  if (!file.type.startsWith("image/") && file.type !== "") {
+    throw new Error("Please choose a JPEG, PNG, WebP, or GIF image.");
+  }
   if (file.size > 8 * 1024 * 1024) {
     throw new Error("File too large (max 8MB).");
   }
 
+  // Prefer createImageBitmap when available.
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file);
+      try {
+        return canvasToJpegDataUrl(bitmap, bitmap.width, bitmap.height, maxWidth, quality);
+      } finally {
+        bitmap.close();
+      }
+    } catch {
+      /* fall through to Image element */
+    }
+  }
+
+  // Image + object URL fallback (widely supported).
+  const objectUrl = URL.createObjectURL(file);
   try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxWidth / Math.max(bitmap.width, 1));
-    const w = Math.max(1, Math.round(bitmap.width * scale));
-    const h = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Could not process image.");
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close();
-    const dataUrl = canvas.toDataURL("image/jpeg", quality);
-    if (!dataUrl.startsWith("data:image/")) throw new Error("Could not encode image.");
-    return dataUrl;
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Could not decode image."));
+      el.src = objectUrl;
+    });
+    return canvasToJpegDataUrl(img, img.naturalWidth || img.width, img.naturalHeight || img.height, maxWidth, quality);
   } catch {
-    return readFileAsDataUrl(file, 8 * 1024 * 1024);
+    // Last resort: raw data URL (may be larger).
+    return readFileAsDataUrl(file, 3 * 1024 * 1024);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
   }
 }
 
@@ -464,7 +373,8 @@ export function isDisplayableMediaUrl(url?: string): boolean {
     lower.startsWith("javascript:") ||
     lower.startsWith("vbscript:") ||
     lower.startsWith("data:text/") ||
-    lower.startsWith("data:application/")
+    lower.startsWith("data:application/") ||
+    lower.startsWith("data:image/svg")
   ) {
     return false;
   }

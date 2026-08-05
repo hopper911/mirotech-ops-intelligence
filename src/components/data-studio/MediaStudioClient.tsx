@@ -88,10 +88,14 @@ export function MediaStudioClient() {
               value={media.backgroundVideoUrl}
               onChange={async (url) => {
                 try {
-                  await update((prev) => ({ ...prev, backgroundVideoUrl: url }));
+                  const nextUrl = url.trim();
+                  if (nextUrl && !isDisplayableMediaUrl(nextUrl)) {
+                    throw new Error("Use an https://, /path, or uploaded video URL.");
+                  }
+                  await update((prev) => ({ ...prev, backgroundVideoUrl: nextUrl }));
                   flash("Hero video updated.");
-                } catch {
-                  /* hook error */
+                } catch (err) {
+                  flash(err instanceof Error ? err.message : "Video update failed.");
                 }
               }}
             />

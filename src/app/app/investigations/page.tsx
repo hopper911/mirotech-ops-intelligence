@@ -1,6 +1,5 @@
 "use client";
 
-import { InvestigationCanvas } from "@/components/app/InvestigationCanvas";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";

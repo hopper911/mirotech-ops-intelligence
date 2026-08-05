@@ -8,7 +8,7 @@ import { formatUsd } from "@/lib/format";
 import type { AuditEvent, Investigation, InvestigationStatus } from "@/lib/ops";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 const STEPS = [
   { id: "summary", label: "Summary" },
@@ -39,26 +39,32 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
   const [step, setStep] = useState<StepId>("summary");
   const [localInv, setLocalInv] = useState<Investigation | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
-  const [owner, setOwner] = useState("");
+  const [ownerOverride, setOwnerOverride] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [boundId, setBoundId] = useState(investigationId);
+
+  // Reset local draft when navigating to a different investigation (React-recommended render adjust).
+  if (boundId !== investigationId) {
+    setBoundId(investigationId);
+    setLocalInv(null);
+    setOwnerOverride(null);
+    setStep("summary");
+    setStatusMsg(null);
+  }
 
   const fromWorkspace = useMemo(
     () => workspace.investigations?.find((i) => i.id === investigationId) ?? null,
     [workspace.investigations, investigationId],
   );
 
-  useEffect(() => {
-    if (fromWorkspace) {
-      setLocalInv(structuredClone(fromWorkspace));
-      setOwner(fromWorkspace.owner);
-    }
-  }, [fromWorkspace]);
+  const inv = localInv?.id === investigationId ? localInv : fromWorkspace;
+  const owner = ownerOverride ?? inv?.owner ?? "";
 
   if (!hydrated) {
     return <LoadingBlock label="Loading investigation…" />;
   }
 
-  if (!localInv) {
+  if (!inv) {
     return (
       <StatePanel
         variant="empty"
@@ -73,12 +79,13 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
     );
   }
 
-  const inv = localInv;
+  const current: Investigation = inv;
   const stepIndex = STEPS.findIndex((s) => s.id === step);
-  const trackingLocked = inv.status === "open";
+  const trackingLocked = current.status === "open";
 
   function persist(next: Investigation) {
     setLocalInv(next);
+    setOwnerOverride(next.owner);
     const updater = (prev: typeof workspace) => ({
       ...prev,
       investigations: (prev.investigations ?? []).map((i) => (i.id === next.id ? next : i)),
@@ -126,7 +133,7 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
 
   function approve() {
     let next = appendAudit(
-      { ...inv, owner, status: "approved" },
+      { ...current, owner, status: "approved" },
       "assigned",
       `Owner set to ${owner}.`,
     );
@@ -151,7 +158,7 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
 
   function dismiss() {
     const next = appendAudit(
-      { ...inv, owner, status: "dismissed" },
+      { ...current, owner, status: "dismissed" },
       "dismissed",
       "Investigation dismissed — no routing change.",
     );
@@ -340,7 +347,7 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
                 <span className="uppercase tracking-[0.12em] text-muted">Owner</span>
                 <select
                   value={owner}
-                  onChange={(e) => setOwner(e.target.value)}
+                  onChange={(e) => setOwnerOverride(e.target.value)}
                   disabled={inv.status !== "open"}
                   className="mt-1 w-full max-w-sm rounded-lg border border-white/10 bg-navy/50 px-3 py-2 text-sm text-white"
                 >

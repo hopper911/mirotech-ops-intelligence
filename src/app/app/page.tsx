@@ -6,7 +6,7 @@ import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
 import { buildExecutive, FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const PERSONA_KEY = "mirotech.persona";
 
@@ -37,14 +37,20 @@ function personaCopy(persona: Persona) {
   };
 }
 
+function readPersona(): Persona {
+  if (typeof window === "undefined") return null;
+  try {
+    const p = sessionStorage.getItem(PERSONA_KEY);
+    if (p === "cfo" || p === "ops" || p === "tech") return p;
+  } catch {
+    /* private mode */
+  }
+  return null;
+}
+
 export default function ExecutivePage() {
   const { workspace, hydrated } = useWorkspace();
-  const [persona, setPersona] = useState<Persona>(null);
-
-  useEffect(() => {
-    const p = sessionStorage.getItem(PERSONA_KEY);
-    if (p === "cfo" || p === "ops" || p === "tech") setPersona(p);
-  }, []);
+  const [persona] = useState<Persona>(readPersona);
 
   if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
   const dash = buildExecutive(workspace);

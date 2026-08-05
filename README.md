@@ -42,7 +42,7 @@ At **`/app/media`** (admin only), upload:
 - Three LinkedIn ad images
 - Four-side carousel images
 
-Public pages (`/`, `/sales/deck`, `/sales/ads`) only display media — no upload UI. Stored in browser localStorage (`mirotech.sales.media`).
+Public pages (`/`, `/sales/deck`, `/sales/ads`) only display media — no upload UI. Stored in browser IndexedDB (`mirotech-sales-media-v4`) on the admin’s device.
 
 ## Product routes (sign-in required)
 
