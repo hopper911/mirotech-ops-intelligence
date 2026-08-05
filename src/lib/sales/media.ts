@@ -1,7 +1,21 @@
+export type ImageFit = "cover" | "contain";
+
+/** Focal point as percentages (0–100) for object-position when fit is cover. */
+export type ImageCrop = {
+  fit: ImageFit;
+  /** Horizontal focus 0=left … 100=right */
+  x: number;
+  /** Vertical focus 0=top … 100=bottom */
+  y: number;
+};
+
+export const DEFAULT_IMAGE_CROP: ImageCrop = { fit: "contain", x: 50, y: 50 };
+
 export type SlideMedia = {
   title: string;
   body: string;
   imageDataUrl?: string;
+  imageCrop?: ImageCrop;
 };
 
 export type LinkedInAd = {
@@ -10,12 +24,14 @@ export type LinkedInAd = {
   body: string;
   cta: string;
   imageDataUrl?: string;
+  imageCrop?: ImageCrop;
 };
 
 export type CarouselFrame = {
   id: string;
   line: string;
   imageDataUrl?: string;
+  imageCrop?: ImageCrop;
 };
 
 export type SalesMedia = {
@@ -99,10 +115,44 @@ export const DEFAULT_SALES_MEDIA: SalesMedia = {
 
 export function cloneSalesMedia(data: SalesMedia): SalesMedia {
   return {
-    slides: data.slides.map((s) => ({ ...s })),
-    linkedInAds: data.linkedInAds.map((a) => ({ ...a })),
-    carousel: data.carousel.map((c) => ({ ...c })),
+    slides: data.slides.map((s) => ({
+      ...s,
+      ...(s.imageCrop ? { imageCrop: { ...s.imageCrop } } : {}),
+    })),
+    linkedInAds: data.linkedInAds.map((a) => ({
+      ...a,
+      ...(a.imageCrop ? { imageCrop: { ...a.imageCrop } } : {}),
+    })),
+    carousel: data.carousel.map((c) => ({
+      ...c,
+      ...(c.imageCrop ? { imageCrop: { ...c.imageCrop } } : {}),
+    })),
     backgroundVideoUrl: data.backgroundVideoUrl ?? "",
+  };
+}
+
+export function normalizeImageCrop(raw?: Partial<ImageCrop> | null): ImageCrop {
+  const fit = raw?.fit === "cover" ? "cover" : "contain";
+  const x = clampPercent(raw?.x ?? 50);
+  const y = clampPercent(raw?.y ?? 50);
+  return { fit, x, y };
+}
+
+function clampPercent(n: unknown): number {
+  const v = typeof n === "number" ? n : Number(n);
+  if (!Number.isFinite(v)) return 50;
+  return Math.min(100, Math.max(0, Math.round(v)));
+}
+
+/** CSS for framed media previews (deck / ads / carousel). */
+export function mediaImageStyle(crop?: Partial<ImageCrop> | null): {
+  className: string;
+  style: { objectPosition: string };
+} {
+  const c = normalizeImageCrop(crop);
+  return {
+    className: c.fit === "cover" ? "object-cover" : "object-contain",
+    style: { objectPosition: `${c.x}% ${c.y}%` },
   };
 }
 

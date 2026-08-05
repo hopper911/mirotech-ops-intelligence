@@ -2,6 +2,7 @@
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { InteractiveCarousel } from "@/components/sales/InteractiveCarousel";
+import { CroppedMediaImage } from "@/components/sales/ImageCropControls";
 import { SignalDots } from "@/components/brand/SignalDots";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { isDisplayableMediaUrl } from "@/lib/sales/media";
@@ -40,12 +41,7 @@ export default function AdsPage() {
                     <div className="mt-3 overflow-hidden rounded-xl border border-border bg-navy">
                       <div className="relative aspect-[1.91/1] bg-navy/80">
                         {isDisplayableMediaUrl(ad.imageDataUrl) ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={ad.imageDataUrl}
-                            alt=""
-                            className="absolute inset-0 h-full w-full object-cover"
-                          />
+                          <CroppedMediaImage src={ad.imageDataUrl!} crop={ad.imageCrop} />
                         ) : (
                           <div className="flex h-full items-center justify-center text-[10px] text-muted">
                             Image · 1.91:1

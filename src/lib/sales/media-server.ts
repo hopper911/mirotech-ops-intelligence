@@ -1,11 +1,18 @@
 import {
   cloneSalesMedia,
   DEFAULT_SALES_MEDIA,
+  normalizeImageCrop,
+  type ImageCrop,
   type SalesMedia,
 } from "@/lib/sales/media";
 import { getObjectText, putObjectText } from "@/lib/storage/object-store";
 
 export const SALES_MEDIA_CONFIG_KEY = "config/sales-media.json";
+
+function pickCrop(saved?: { imageCrop?: Partial<ImageCrop> }): { imageCrop?: ImageCrop } {
+  if (!saved?.imageCrop) return {};
+  return { imageCrop: normalizeImageCrop(saved.imageCrop) };
+}
 
 function mergeConfig(parsed: Partial<SalesMedia>): SalesMedia {
   const defaults = cloneSalesMedia(DEFAULT_SALES_MEDIA);
@@ -17,6 +24,7 @@ function mergeConfig(parsed: Partial<SalesMedia>): SalesMedia {
             title: saved?.title || slide.title,
             body: saved?.body || slide.body,
             ...(saved?.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+            ...pickCrop(saved),
           };
         })
       : defaults.slides;
@@ -30,6 +38,7 @@ function mergeConfig(parsed: Partial<SalesMedia>): SalesMedia {
       body: saved.body || ad.body,
       cta: saved.cta || ad.cta,
       ...(saved.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+      ...pickCrop(saved),
     };
   });
 
@@ -40,6 +49,7 @@ function mergeConfig(parsed: Partial<SalesMedia>): SalesMedia {
       id: frame.id,
       line: saved.line || frame.line,
       ...(saved.imageDataUrl ? { imageDataUrl: saved.imageDataUrl } : {}),
+      ...pickCrop(saved),
     };
   });
 

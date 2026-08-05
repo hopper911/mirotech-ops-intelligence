@@ -1,6 +1,7 @@
 "use client";
 
 import { isDisplayableMediaUrl, type CarouselFrame } from "@/lib/sales/media";
+import { CroppedMediaImage } from "@/components/sales/ImageCropControls";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -92,12 +93,7 @@ export function InteractiveCarousel({ frames }: { frames: CarouselFrame[] }) {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
             {isDisplayableMediaUrl(frame.imageDataUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={frame.imageDataUrl}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              <CroppedMediaImage src={frame.imageDataUrl!} crop={frame.imageCrop} />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-blue/25 via-navy to-navy" />
             )}

@@ -2,6 +2,7 @@
 
 import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { CroppedMediaImage } from "@/components/sales/ImageCropControls";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { isDisplayableMediaUrl } from "@/lib/sales/media";
 import { useState } from "react";
@@ -41,12 +42,7 @@ export default function DeckPage() {
             </div>
             <div className="relative min-h-[14rem] border-t border-white/10 bg-navy/40 lg:border-l lg:border-t-0">
               {isDisplayableMediaUrl(slide.imageDataUrl) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={slide.imageDataUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
+                <CroppedMediaImage src={slide.imageDataUrl!} crop={slide.imageCrop} />
               ) : (
                 <div className="flex h-full min-h-[14rem] items-center justify-center p-6 text-center text-xs text-muted">
                   Slide visual

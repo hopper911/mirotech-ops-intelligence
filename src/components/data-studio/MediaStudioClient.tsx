@@ -1,9 +1,13 @@
 "use client";
 
 import { ImageUploadButton, VideoUploadControls } from "@/components/sales/MediaUpload";
+import {
+  CroppedMediaImage,
+  ImageCropControls,
+} from "@/components/sales/ImageCropControls";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
-import { isDisplayableMediaUrl } from "@/lib/sales/media";
+import { DEFAULT_IMAGE_CROP, isDisplayableMediaUrl } from "@/lib/sales/media";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -144,12 +148,11 @@ export function MediaStudioClient() {
           </div>
           <p className="mt-3 font-semibold text-white">{slide.title}</p>
           <p className="mt-1 text-sm text-muted">{slide.body}</p>
-          <div className="relative mt-4 aspect-video overflow-hidden rounded-xl border border-border bg-navy/50">
+          <div className="relative mt-4 min-h-[16rem] overflow-hidden rounded-xl border border-border bg-navy/50 lg:aspect-auto lg:h-72">
             {isDisplayableMediaUrl(slide.imageDataUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={slide.imageDataUrl} alt="" className="h-full w-full object-cover" />
+              <CroppedMediaImage src={slide.imageDataUrl!} crop={slide.imageCrop} />
             ) : (
-              <div className="flex h-full items-center justify-center text-xs text-muted">
+              <div className="flex h-full min-h-[16rem] items-center justify-center text-xs text-muted">
                 No image
               </div>
             )}
@@ -163,10 +166,14 @@ export function MediaStudioClient() {
                 try {
                   await update((prev) => {
                     const next = [...prev.slides];
-                    next[slideIndex] = { ...next[slideIndex], imageDataUrl: url };
+                    next[slideIndex] = {
+                      ...next[slideIndex],
+                      imageDataUrl: url,
+                      imageCrop: next[slideIndex].imageCrop ?? DEFAULT_IMAGE_CROP,
+                    };
                     return { ...prev, slides: next };
                   });
-                  flash("Slide image saved — preview on /sales/deck.");
+                  flash("Slide image saved — adjust framing below, then preview on /sales/deck.");
                 } catch {
                   /* error shown via hook */
                 }
@@ -175,7 +182,11 @@ export function MediaStudioClient() {
                 try {
                   await update((prev) => {
                     const next = [...prev.slides];
-                    next[slideIndex] = { ...next[slideIndex], imageDataUrl: undefined };
+                    next[slideIndex] = {
+                      ...next[slideIndex],
+                      imageDataUrl: undefined,
+                      imageCrop: undefined,
+                    };
                     return { ...prev, slides: next };
                   });
                   flash("Slide image removed.");
@@ -185,6 +196,23 @@ export function MediaStudioClient() {
               }}
             />
           </div>
+          {isDisplayableMediaUrl(slide.imageDataUrl) ? (
+            <ImageCropControls
+              key={`slide-crop-${slideIndex}`}
+              crop={slide.imageCrop}
+              onChange={async (imageCrop) => {
+                try {
+                  await update((prev) => {
+                    const next = [...prev.slides];
+                    next[slideIndex] = { ...next[slideIndex], imageCrop };
+                    return { ...prev, slides: next };
+                  });
+                } catch {
+                  /* hook error */
+                }
+              }}
+            />
+          ) : null}
           <Link href="/sales/deck" className="mt-4 inline-block text-sm text-cyan hover:underline">
             Preview deck →
           </Link>
@@ -200,8 +228,7 @@ export function MediaStudioClient() {
               <p className="mt-1 text-sm text-muted">{ad.body}</p>
               <div className="relative mt-4 aspect-[1.91/1] overflow-hidden rounded-xl border border-border bg-navy/50">
                 {isDisplayableMediaUrl(ad.imageDataUrl) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={ad.imageDataUrl} alt="" className="h-full w-full object-cover" />
+                  <CroppedMediaImage src={ad.imageDataUrl!} crop={ad.imageCrop} />
                 ) : (
                   <div className="flex h-full items-center justify-center text-xs text-muted">
                     No image · 1.91:1
@@ -218,7 +245,13 @@ export function MediaStudioClient() {
                       await update((prev) => ({
                         ...prev,
                         linkedInAds: prev.linkedInAds.map((a) =>
-                          a.id === ad.id ? { ...a, imageDataUrl: url } : a,
+                          a.id === ad.id
+                            ? {
+                                ...a,
+                                imageDataUrl: url,
+                                imageCrop: a.imageCrop ?? DEFAULT_IMAGE_CROP,
+                              }
+                            : a,
                         ),
                       }));
                       flash(`Ad ${idx + 1} image saved.`);
@@ -231,7 +264,9 @@ export function MediaStudioClient() {
                       await update((prev) => ({
                         ...prev,
                         linkedInAds: prev.linkedInAds.map((a) =>
-                          a.id === ad.id ? { ...a, imageDataUrl: undefined } : a,
+                          a.id === ad.id
+                            ? { ...a, imageDataUrl: undefined, imageCrop: undefined }
+                            : a,
                         ),
                       }));
                       flash(`Ad ${idx + 1} image removed.`);
@@ -241,6 +276,24 @@ export function MediaStudioClient() {
                   }}
                 />
               </div>
+              {isDisplayableMediaUrl(ad.imageDataUrl) ? (
+                <ImageCropControls
+                  key={`ad-crop-${ad.id}`}
+                  crop={ad.imageCrop}
+                  onChange={async (imageCrop) => {
+                    try {
+                      await update((prev) => ({
+                        ...prev,
+                        linkedInAds: prev.linkedInAds.map((a) =>
+                          a.id === ad.id ? { ...a, imageCrop } : a,
+                        ),
+                      }));
+                    } catch {
+                      /* hook error */
+                    }
+                  }}
+                />
+              ) : null}
             </article>
           ))}
           <Link href="/sales/ads" className="inline-block text-sm text-cyan hover:underline">
@@ -279,8 +332,7 @@ export function MediaStudioClient() {
           <p className="mt-3 font-semibold text-white">{frame.line}</p>
           <div className="relative mt-4 aspect-video overflow-hidden rounded-xl border border-border bg-navy/50">
             {isDisplayableMediaUrl(frame.imageDataUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={frame.imageDataUrl} alt="" className="h-full w-full object-cover" />
+              <CroppedMediaImage src={frame.imageDataUrl!} crop={frame.imageCrop} />
             ) : (
               <div className="flex h-full items-center justify-center text-xs text-muted">
                 No image
@@ -297,7 +349,13 @@ export function MediaStudioClient() {
                   await update((prev) => ({
                     ...prev,
                     carousel: prev.carousel.map((c, idx) =>
-                      idx === carouselIndex ? { ...c, imageDataUrl: url } : c,
+                      idx === carouselIndex
+                        ? {
+                            ...c,
+                            imageDataUrl: url,
+                            imageCrop: c.imageCrop ?? DEFAULT_IMAGE_CROP,
+                          }
+                        : c,
                     ),
                   }));
                   flash("Carousel image saved.");
@@ -310,7 +368,9 @@ export function MediaStudioClient() {
                   await update((prev) => ({
                     ...prev,
                     carousel: prev.carousel.map((c, idx) =>
-                      idx === carouselIndex ? { ...c, imageDataUrl: undefined } : c,
+                      idx === carouselIndex
+                        ? { ...c, imageDataUrl: undefined, imageCrop: undefined }
+                        : c,
                     ),
                   }));
                   flash("Carousel image removed.");
@@ -320,6 +380,24 @@ export function MediaStudioClient() {
               }}
             />
           </div>
+          {isDisplayableMediaUrl(frame.imageDataUrl) ? (
+            <ImageCropControls
+              key={`carousel-crop-${carouselIndex}`}
+              crop={frame.imageCrop}
+              onChange={async (imageCrop) => {
+                try {
+                  await update((prev) => ({
+                    ...prev,
+                    carousel: prev.carousel.map((c, idx) =>
+                      idx === carouselIndex ? { ...c, imageCrop } : c,
+                    ),
+                  }));
+                } catch {
+                  /* hook error */
+                }
+              }}
+            />
+          ) : null}
           <Link href="/sales/ads" className="mt-4 inline-block text-sm text-cyan hover:underline">
             Preview carousel →
           </Link>
