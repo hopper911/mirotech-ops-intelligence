@@ -2,6 +2,7 @@ import {
   cloneWorkspace,
   DEFAULT_WORKSPACE,
   isWorkspaceData,
+  normalizeWorkspace,
   WORKSPACE_STORAGE_KEY,
   type WorkspaceData,
 } from "./workspace";
@@ -13,7 +14,7 @@ export function loadWorkspaceFromStorage(): WorkspaceData | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (!isWorkspaceData(parsed)) return null;
-    return parsed;
+    return normalizeWorkspace(parsed);
   } catch {
     return null;
   }
@@ -38,7 +39,7 @@ export function importWorkspaceJson(raw: string): WorkspaceData {
   if (!isWorkspaceData(parsed)) {
     throw new Error("Invalid workspace JSON shape");
   }
-  return cloneWorkspace(parsed);
+  return normalizeWorkspace(parsed);
 }
 
 export function getDefaultWorkspace(): WorkspaceData {

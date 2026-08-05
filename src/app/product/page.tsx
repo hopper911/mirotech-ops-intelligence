@@ -10,6 +10,7 @@ import { SignalDots } from "@/components/brand/SignalDots";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import Link from "next/link";
 import type { ComponentType } from "react";
 
@@ -88,10 +89,10 @@ export default function ProductPage() {
             recommendations that finance and engineering can defend.
           </p>
           <Link
-            href="/login"
+            href={`/login?callbackUrl=${encodeURIComponent(`/app/investigations/${FEATURED_INVESTIGATION_ID}`)}`}
             className="btn-specular mt-6 inline-flex rounded-full bg-green px-5 py-2.5 text-sm font-semibold text-navy"
           >
-            Open interactive demo
+            Open investigation demo
           </Link>
         </Reveal>
 

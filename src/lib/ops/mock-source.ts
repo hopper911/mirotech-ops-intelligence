@@ -54,6 +54,14 @@ export class WorkspaceOpsSource implements OpsSource {
   async getNotifications() {
     return this.workspace.notifications;
   }
+
+  async getInvestigations() {
+    return this.workspace.investigations ?? [];
+  }
+
+  async getInvestigation(id: string) {
+    return this.workspace.investigations?.find((i) => i.id === id) ?? null;
+  }
 }
 
 /** Server/default source (baked Northline data). */

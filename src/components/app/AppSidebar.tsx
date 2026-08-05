@@ -18,6 +18,7 @@ const nav: {
   adminOnly?: boolean;
 }[] = [
   { href: "/app", label: "Executive", Icon: IconPerformance },
+  { href: "/app/investigations", label: "Investigations", Icon: IconInsights },
   { href: "/app/expenses", label: "Expenses", Icon: IconOptimization },
   { href: "/app/ai-usage", label: "AI usage", Icon: IconInsights },
   { href: "/app/subscriptions", label: "Subscriptions", Icon: IconSystems },

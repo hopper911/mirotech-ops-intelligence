@@ -25,6 +25,14 @@ npm run dev
 Demo login: `demo@mirotech.io` / `ops-demo`  
 Admin (Data Studio + Media Studio): `admin@mirotech.io` / `12345mirotech`
 
+## Signature workflow
+
+Anomaly investigation (Moment challenge): **Summary → Cost spike → Cause → Recommendation → Approval → Tracking**
+
+- Prototype: `/app/investigations/inv-ai-gpt4o-spike` (after sign-in)
+- Case study: `/concept`
+- Entries: Alerts toast, Executive card, AI usage anomaly row, Onboarding, sidebar **Investigations**
+
 ## Media Studio (admin)
 
 At **`/app/media`** (admin only), upload:
@@ -41,6 +49,8 @@ Public pages (`/`, `/sales/deck`, `/sales/ads`) only display media — no upload
 | Route | Screen |
 | --- | --- |
 | `/app` | Executive dashboard |
+| `/app/investigations` | Anomaly investigation list |
+| `/app/investigations/[id]` | Signature investigation workflow |
 | `/app/expenses` | Cloud + software expenses |
 | `/app/ai-usage` | AI API usage |
 | `/app/subscriptions` | Subscription inventory |

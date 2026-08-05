@@ -114,6 +114,58 @@ export type OpsNotification = {
   href: string;
 };
 
+export type InvestigationStatus = "open" | "approved" | "dismissed" | "tracking";
+
+export type AuditEvent = {
+  id: string;
+  at: string;
+  actor: string;
+  action: "opened" | "assigned" | "approved" | "dismissed" | "tracking_started" | "note";
+  note: string;
+};
+
+export type ProbableCause = {
+  id: string;
+  title: string;
+  likelihood: "high" | "medium" | "low";
+  service: string;
+  team: string;
+  summary: string;
+  evidence: string[];
+};
+
+export type InvestigationTracking = {
+  expectedMonthlySavings: number;
+  observedMonthlySavings: number | null;
+  windowLabel: string;
+  checkpointNote: string;
+  seriesExpected: SeriesPoint[];
+  seriesObserved: SeriesPoint[];
+};
+
+export type Investigation = {
+  id: string;
+  title: string;
+  summary: string;
+  severity: "watch" | "critical";
+  status: InvestigationStatus;
+  recommendationId: string;
+  service: string;
+  team: string;
+  owner: string;
+  confidence: number;
+  risk: "low" | "medium" | "high";
+  impactMonthly: number;
+  impactAnnual: number;
+  spikeWindow: string;
+  spikeDelta: string;
+  spikeSeries: SeriesPoint[];
+  causes: ProbableCause[];
+  action: string;
+  auditTrail: AuditEvent[];
+  tracking: InvestigationTracking;
+};
+
 export type ExecutiveDashboard = {
   company: string;
   sampleLabel: string;
@@ -122,6 +174,7 @@ export type ExecutiveDashboard = {
   spendTrend: SeriesPoint[];
   topRecommendations: Recommendation[];
   riskNotes: string[];
+  featuredInvestigationId?: string;
 };
 
 export interface OpsSource {
@@ -135,4 +188,6 @@ export interface OpsSource {
   getForecast(): Promise<ForecastBundle>;
   getAssistantPresets(): Promise<AssistantPreset[]>;
   getNotifications(): Promise<OpsNotification[]>;
+  getInvestigations(): Promise<Investigation[]>;
+  getInvestigation(id: string): Promise<Investigation | null>;
 }

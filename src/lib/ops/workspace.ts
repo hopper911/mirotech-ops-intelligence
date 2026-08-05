@@ -5,6 +5,7 @@ import type {
   ExecutiveDashboard,
   ExecutiveKpi,
   ForecastBundle,
+  Investigation,
   OpsNotification,
   Recommendation,
   SeriesPoint,
@@ -23,12 +24,105 @@ export type WorkspaceData = {
   subscriptions: Subscription[];
   automation: AutomationJob[];
   recommendations: Recommendation[];
+  investigations: Investigation[];
   forecast: ForecastBundle;
   assistantPresets: AssistantPreset[];
   notifications: OpsNotification[];
 };
 
+/** Featured signature investigation for the Moment workflow. */
+export const FEATURED_INVESTIGATION_ID = "inv-ai-gpt4o-spike";
+
 export const WORKSPACE_STORAGE_KEY = "mirotech.ops.workspace";
+
+const DEFAULT_INVESTIGATIONS: Investigation[] = [
+  {
+    id: FEATURED_INVESTIGATION_ID,
+    title: "Support GPT-4o spend anomaly",
+    summary:
+      "Support summarization spend jumped +38% week over week. Most traffic still routes to GPT-4o even where gpt-4o-mini passes quality gates.",
+    severity: "critical",
+    status: "open",
+    recommendationId: "rec-ai-routing",
+    service: "OpenAI · GPT-4o",
+    team: "Support",
+    owner: "Engineering",
+    confidence: 0.86,
+    risk: "medium",
+    impactMonthly: 3100,
+    impactAnnual: 37200,
+    spikeWindow: "Jul 28 – Aug 4 · Support summarization",
+    spikeDelta: "+38% WoW",
+    spikeSeries: [
+      { label: "Mon", value: 1.8 },
+      { label: "Tue", value: 1.9 },
+      { label: "Wed", value: 2.1 },
+      { label: "Thu", value: 2.0 },
+      { label: "Fri", value: 2.4 },
+      { label: "Sat", value: 2.9 },
+      { label: "Sun", value: 3.1 },
+      { label: "Mon+", value: 3.4 },
+    ],
+    causes: [
+      {
+        id: "cause-routing",
+        title: "Default model still GPT-4o for summarization",
+        likelihood: "high",
+        service: "Support ticket summarizer",
+        team: "Support",
+        summary:
+          "72% of summarization calls use GPT-4o. Shadow eval shows gpt-4o-mini within ±3% quality for low-stakes tickets.",
+        evidence: [
+          "API log sample n=2,400: latency and eval score within ±3%",
+          "Team Support spend $9,840 MoM on summarization alone",
+          "Shadow eval passed on 94% of tickets",
+        ],
+      },
+      {
+        id: "cause-volume",
+        title: "Ticket volume up, not unit price",
+        likelihood: "medium",
+        service: "Zendesk → summarizer pipeline",
+        team: "Support",
+        summary:
+          "Inbound tickets rose ~12% WoW; that alone does not explain +38% model spend.",
+        evidence: [
+          "Zendesk volume +12% WoW",
+          "Tokens per ticket +21% when GPT-4o selected",
+        ],
+      },
+    ],
+    action:
+      "Pilot gpt-4o-mini routing for summarization with a 10% holdout, keep GPT-4o for escalations, and review quality gates after 14 days.",
+    auditTrail: [
+      {
+        id: "ae-open",
+        at: "2026-08-04T14:12:00Z",
+        actor: "Mirotech anomaly digest",
+        action: "opened",
+        note: "Critical AI spend anomaly opened from weekly digest.",
+      },
+    ],
+    tracking: {
+      expectedMonthlySavings: 3100,
+      observedMonthlySavings: null,
+      windowLabel: "14-day post-approval window",
+      checkpointNote: "Tracking unlocks after approval. Sample demo — not live billing.",
+      seriesExpected: [
+        { label: "D1", value: 0.4 },
+        { label: "D3", value: 1.1 },
+        { label: "D7", value: 2.0 },
+        { label: "D14", value: 3.1 },
+      ],
+      seriesObserved: [
+        { label: "D1", value: 0 },
+        { label: "D3", value: 0 },
+        { label: "D7", value: 0 },
+        { label: "D14", value: 0 },
+      ],
+    },
+  },
+];
 
 export const DEFAULT_WORKSPACE: WorkspaceData = {
   company: "Northline Commerce",
@@ -385,6 +479,7 @@ export const DEFAULT_WORKSPACE: WorkspaceData = {
       owner: "Finance Systems",
     },
   ],
+  investigations: DEFAULT_INVESTIGATIONS,
   forecast: {
     current: {
       id: "current",
@@ -483,10 +578,10 @@ export const DEFAULT_WORKSPACE: WorkspaceData = {
     {
       id: "n1",
       title: "AI spend anomaly",
-      body: "Support GPT-4o spend +38% week over week.",
+      body: "Support GPT-4o spend +38% week over week — open investigation.",
       severity: "critical",
       createdAt: "2026-08-04T14:12:00Z",
-      href: "/app/ai-usage",
+      href: `/app/investigations/${FEATURED_INVESTIGATION_ID}`,
     },
     {
       id: "n2",
@@ -515,6 +610,14 @@ export const DEFAULT_WORKSPACE: WorkspaceData = {
   ],
 };
 
+export function normalizeWorkspace(data: WorkspaceData): WorkspaceData {
+  const next = cloneWorkspace(data);
+  if (!next.investigations?.length) {
+    next.investigations = structuredClone(DEFAULT_INVESTIGATIONS);
+  }
+  return next;
+}
+
 export function cloneWorkspace(data: WorkspaceData = DEFAULT_WORKSPACE): WorkspaceData {
   return structuredClone(data);
 }
@@ -528,6 +631,7 @@ export function buildExecutive(workspace: WorkspaceData): ExecutiveDashboard {
     spendTrend: workspace.spendTrend,
     topRecommendations: workspace.recommendations.slice(0, 3),
     riskNotes: workspace.riskNotes,
+    featuredInvestigationId: FEATURED_INVESTIGATION_ID,
   };
 }
 

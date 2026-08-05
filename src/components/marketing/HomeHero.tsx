@@ -5,6 +5,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { BRAND } from "@/lib/brand";
+import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import { isDisplayableMediaUrl } from "@/lib/sales/media";
 import Link from "next/link";
 
@@ -56,22 +57,22 @@ export function HomeHero() {
             </p>
           </Reveal>
           <Reveal delay={0.36}>
-            <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/login"
+                href={`/login?callbackUrl=${encodeURIComponent(`/app/investigations/${FEATURED_INVESTIGATION_ID}`)}`}
                 className="btn-specular rounded-full bg-green px-6 py-3 text-sm font-semibold text-navy"
               >
-                Enter the demo
+                Open investigation demo
               </Link>
               <Link
-                href="/product"
+                href="/concept"
                 className="btn-ghost-glass rounded-full px-6 py-3 text-sm text-white"
               >
-                Explore product
+                Read the case study
               </Link>
             </div>
             <p className="mt-4 text-xs text-cyan">
-              Sample concept · Northline Commerce workspace · not live billing data
+              Sample concept · Northline Commerce · anomaly investigation workflow
             </p>
           </Reveal>
         </div>

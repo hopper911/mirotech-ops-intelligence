@@ -2,7 +2,9 @@
 
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
+import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import { formatUsd } from "@/lib/format";
+import Link from "next/link";
 
 export default function AiUsagePage() {
   const { workspace, hydrated } = useWorkspace();
@@ -30,6 +32,12 @@ export default function AiUsagePage() {
         <ul className="mt-2 space-y-1 text-sm text-foreground/90">
           {anomalies.length ? anomalies.map((a) => <li key={a}>• {a}</li>) : <li>• None</li>}
         </ul>
+        <Link
+          href={`/app/investigations/${FEATURED_INVESTIGATION_ID}`}
+          className="mt-3 inline-block text-sm text-green hover:underline"
+        >
+          Open GPT-4o investigation workflow →
+        </Link>
       </div>
 
       <div className="text-sm text-muted">
@@ -39,25 +47,55 @@ export default function AiUsagePage() {
 
       <div className="glass-app overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[640px] text-left text-sm">
+          <caption className="sr-only">AI model usage by team</caption>
           <thead className="border-b border-border text-xs uppercase tracking-[0.12em] text-muted">
             <tr>
-              <th className="px-4 py-3">Model</th>
-              <th className="px-4 py-3">Provider</th>
-              <th className="px-4 py-3">Team</th>
-              <th className="px-4 py-3">Tokens (M)</th>
-              <th className="px-4 py-3">Cost</th>
-              <th className="px-4 py-3">Signal</th>
+              <th scope="col" className="px-4 py-3">
+                Model
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Provider
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Team
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Tokens (M)
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Cost
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Signal
+              </th>
             </tr>
           </thead>
           <tbody>
             {models.map((m) => (
               <tr key={m.id} className="border-t border-border/80">
-                <td className="px-4 py-3 font-medium text-white">{m.model}</td>
+                <th scope="row" className="px-4 py-3 font-medium text-white">
+                  {m.model}
+                </th>
                 <td className="px-4 py-3 text-muted">{m.provider}</td>
                 <td className="px-4 py-3 text-muted">{m.team}</td>
                 <td className="px-4 py-3">{m.tokensM}</td>
                 <td className="px-4 py-3">{formatUsd(m.cost)}</td>
-                <td className="px-4 py-3 text-cyan">{m.anomaly ?? "—"}</td>
+                <td className="px-4 py-3 text-cyan">
+                  {m.anomaly ? (
+                    m.team === "Support" ? (
+                      <Link
+                        href={`/app/investigations/${FEATURED_INVESTIGATION_ID}`}
+                        className="hover:underline"
+                      >
+                        {m.anomaly}
+                      </Link>
+                    ) : (
+                      m.anomaly
+                    )
+                  ) : (
+                    "—"
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
