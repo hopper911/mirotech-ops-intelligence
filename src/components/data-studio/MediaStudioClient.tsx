@@ -3,13 +3,14 @@
 import { ImageUploadButton, VideoUploadControls } from "@/components/sales/MediaUpload";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
+import { isDisplayableMediaUrl } from "@/lib/sales/media";
 import Link from "next/link";
 import { useState } from "react";
 
 type Tab = "video" | "deck" | "ads" | "carousel";
 
 export function MediaStudioClient() {
-  const { media, hydrated, update, reset } = useSalesMedia();
+  const { media, hydrated, update, reset, error, clearError } = useSalesMedia();
   const [tab, setTab] = useState<Tab>("video");
   const [slideIndex, setSlideIndex] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -41,6 +42,17 @@ export function MediaStudioClient() {
         <SampleDataBadge />
       </header>
 
+      {error ? (
+        <div className="rounded-2xl border border-cyan/40 bg-cyan/10 px-4 py-3 text-sm text-cyan">
+          {error}{" "}
+          <button type="button" className="underline" onClick={clearError}>
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+
+      {message ? <p className="text-sm text-green">{message}</p> : null}
+
       <div className="flex flex-wrap gap-2">
         {(
           [
@@ -62,8 +74,6 @@ export function MediaStudioClient() {
           </button>
         ))}
       </div>
-
-      {message ? <p className="text-sm text-green">{message}</p> : null}
 
       {tab === "video" ? (
         <section className="glass-app rounded-2xl p-5">
@@ -124,7 +134,7 @@ export function MediaStudioClient() {
           <p className="mt-3 font-semibold text-white">{slide.title}</p>
           <p className="mt-1 text-sm text-muted">{slide.body}</p>
           <div className="relative mt-4 aspect-video overflow-hidden rounded-xl border border-border bg-navy/50">
-            {slide.imageDataUrl ? (
+            {isDisplayableMediaUrl(slide.imageDataUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={slide.imageDataUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -136,7 +146,7 @@ export function MediaStudioClient() {
           <div className="mt-3">
             <ImageUploadButton
               label="Upload slide image"
-              hasImage={Boolean(slide.imageDataUrl)}
+              hasImage={isDisplayableMediaUrl(slide.imageDataUrl)}
               onUploaded={(url) => {
                 update((prev) => {
                   const next = [...prev.slides];
@@ -169,7 +179,7 @@ export function MediaStudioClient() {
               <p className="mt-2 font-semibold text-white">{ad.headline}</p>
               <p className="mt-1 text-sm text-muted">{ad.body}</p>
               <div className="relative mt-4 aspect-[1.91/1] overflow-hidden rounded-xl border border-border bg-navy/50">
-                {ad.imageDataUrl ? (
+                {isDisplayableMediaUrl(ad.imageDataUrl) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={ad.imageDataUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -181,7 +191,7 @@ export function MediaStudioClient() {
               <div className="mt-3">
                 <ImageUploadButton
                   label="Upload ad image"
-                  hasImage={Boolean(ad.imageDataUrl)}
+                  hasImage={isDisplayableMediaUrl(ad.imageDataUrl)}
                   onUploaded={(url) => {
                     update((prev) => ({
                       ...prev,
@@ -239,7 +249,7 @@ export function MediaStudioClient() {
           </div>
           <p className="mt-3 font-semibold text-white">{frame.line}</p>
           <div className="relative mt-4 aspect-video overflow-hidden rounded-xl border border-border bg-navy/50">
-            {frame.imageDataUrl ? (
+            {isDisplayableMediaUrl(frame.imageDataUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={frame.imageDataUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -251,7 +261,7 @@ export function MediaStudioClient() {
           <div className="mt-3">
             <ImageUploadButton
               label="Upload carousel image"
-              hasImage={Boolean(frame.imageDataUrl)}
+              hasImage={isDisplayableMediaUrl(frame.imageDataUrl)}
               onUploaded={(url) => {
                 update((prev) => ({
                   ...prev,

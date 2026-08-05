@@ -1,9 +1,9 @@
 "use client";
 
-import { readFileAsDataUrl } from "@/lib/sales/media";
+import { compressImageFile, readFileAsDataUrl } from "@/lib/sales/media";
 import { useRef, useState } from "react";
 
-const IMAGE_MAX = 1.5 * 1024 * 1024;
+const IMAGE_INPUT_MAX = 8 * 1024 * 1024;
 const VIDEO_MAX = 4 * 1024 * 1024;
 
 export function ImageUploadButton({
@@ -19,6 +19,7 @@ export function ImageUploadButton({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -32,26 +33,34 @@ export function ImageUploadButton({
           e.target.value = "";
           if (!file) return;
           setError(null);
+          setBusy(true);
           try {
-            const url = await readFileAsDataUrl(file, IMAGE_MAX);
+            if (file.size > IMAGE_INPUT_MAX) {
+              throw new Error("File too large (max 8MB).");
+            }
+            const url = await compressImageFile(file);
             onUploaded(url);
           } catch (err) {
             setError(err instanceof Error ? err.message : "Upload failed");
+          } finally {
+            setBusy(false);
           }
         }}
       />
       <button
         type="button"
+        disabled={busy}
         onClick={() => inputRef.current?.click()}
-        className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10"
+        className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10 disabled:opacity-50"
       >
-        {label}
+        {busy ? "Processing…" : label}
       </button>
       {hasImage && onClear ? (
         <button
           type="button"
+          disabled={busy}
           onClick={onClear}
-          className="rounded-full border border-white/15 px-3 py-1 text-xs text-muted hover:text-white"
+          className="rounded-full border border-white/15 px-3 py-1 text-xs text-muted hover:text-white disabled:opacity-50"
         >
           Remove
         </button>
