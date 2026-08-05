@@ -10,7 +10,9 @@ import { useState } from "react";
 type Tab = "video" | "deck" | "ads" | "carousel";
 
 export function MediaStudioClient() {
-  const { media, hydrated, update, reset, error, clearError } = useSalesMedia();
+  const { media, hydrated, update, reset, error, clearError } = useSalesMedia({
+    allowEdit: true,
+  });
   const [tab, setTab] = useState<Tab>("video");
   const [slideIndex, setSlideIndex] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -84,9 +86,13 @@ export function MediaStudioClient() {
           <div className="mt-4">
             <VideoUploadControls
               value={media.backgroundVideoUrl}
-              onChange={(url) => {
-                update((prev) => ({ ...prev, backgroundVideoUrl: url }));
-                flash("Hero video updated.");
+              onChange={async (url) => {
+                try {
+                  await update((prev) => ({ ...prev, backgroundVideoUrl: url }));
+                  flash("Hero video updated.");
+                } catch {
+                  /* hook error */
+                }
               }}
             />
           </div>
@@ -147,21 +153,29 @@ export function MediaStudioClient() {
             <ImageUploadButton
               label="Upload slide image"
               hasImage={isDisplayableMediaUrl(slide.imageDataUrl)}
-              onUploaded={(url) => {
-                update((prev) => {
-                  const next = [...prev.slides];
-                  next[slideIndex] = { ...next[slideIndex], imageDataUrl: url };
-                  return { ...prev, slides: next };
-                });
-                flash("Slide image saved.");
+              onUploaded={async (url) => {
+                try {
+                  await update((prev) => {
+                    const next = [...prev.slides];
+                    next[slideIndex] = { ...next[slideIndex], imageDataUrl: url };
+                    return { ...prev, slides: next };
+                  });
+                  flash("Slide image saved — preview on /sales/deck.");
+                } catch {
+                  /* error shown via hook */
+                }
               }}
-              onClear={() => {
-                update((prev) => {
-                  const next = [...prev.slides];
-                  next[slideIndex] = { ...next[slideIndex], imageDataUrl: undefined };
-                  return { ...prev, slides: next };
-                });
-                flash("Slide image removed.");
+              onClear={async () => {
+                try {
+                  await update((prev) => {
+                    const next = [...prev.slides];
+                    next[slideIndex] = { ...next[slideIndex], imageDataUrl: undefined };
+                    return { ...prev, slides: next };
+                  });
+                  flash("Slide image removed.");
+                } catch {
+                  /* error shown via hook */
+                }
               }}
             />
           </div>
@@ -192,23 +206,31 @@ export function MediaStudioClient() {
                 <ImageUploadButton
                   label="Upload ad image"
                   hasImage={isDisplayableMediaUrl(ad.imageDataUrl)}
-                  onUploaded={(url) => {
-                    update((prev) => ({
-                      ...prev,
-                      linkedInAds: prev.linkedInAds.map((a) =>
-                        a.id === ad.id ? { ...a, imageDataUrl: url } : a,
-                      ),
-                    }));
-                    flash(`Ad ${idx + 1} image saved.`);
+                  onUploaded={async (url) => {
+                    try {
+                      await update((prev) => ({
+                        ...prev,
+                        linkedInAds: prev.linkedInAds.map((a) =>
+                          a.id === ad.id ? { ...a, imageDataUrl: url } : a,
+                        ),
+                      }));
+                      flash(`Ad ${idx + 1} image saved.`);
+                    } catch {
+                      /* hook error */
+                    }
                   }}
-                  onClear={() => {
-                    update((prev) => ({
-                      ...prev,
-                      linkedInAds: prev.linkedInAds.map((a) =>
-                        a.id === ad.id ? { ...a, imageDataUrl: undefined } : a,
-                      ),
-                    }));
-                    flash(`Ad ${idx + 1} image removed.`);
+                  onClear={async () => {
+                    try {
+                      await update((prev) => ({
+                        ...prev,
+                        linkedInAds: prev.linkedInAds.map((a) =>
+                          a.id === ad.id ? { ...a, imageDataUrl: undefined } : a,
+                        ),
+                      }));
+                      flash(`Ad ${idx + 1} image removed.`);
+                    } catch {
+                      /* hook error */
+                    }
                   }}
                 />
               </div>
@@ -262,23 +284,31 @@ export function MediaStudioClient() {
             <ImageUploadButton
               label="Upload carousel image"
               hasImage={isDisplayableMediaUrl(frame.imageDataUrl)}
-              onUploaded={(url) => {
-                update((prev) => ({
-                  ...prev,
-                  carousel: prev.carousel.map((c, idx) =>
-                    idx === carouselIndex ? { ...c, imageDataUrl: url } : c,
-                  ),
-                }));
-                flash("Carousel image saved.");
+              onUploaded={async (url) => {
+                try {
+                  await update((prev) => ({
+                    ...prev,
+                    carousel: prev.carousel.map((c, idx) =>
+                      idx === carouselIndex ? { ...c, imageDataUrl: url } : c,
+                    ),
+                  }));
+                  flash("Carousel image saved.");
+                } catch {
+                  /* hook error */
+                }
               }}
-              onClear={() => {
-                update((prev) => ({
-                  ...prev,
-                  carousel: prev.carousel.map((c, idx) =>
-                    idx === carouselIndex ? { ...c, imageDataUrl: undefined } : c,
-                  ),
-                }));
-                flash("Carousel image removed.");
+              onClear={async () => {
+                try {
+                  await update((prev) => ({
+                    ...prev,
+                    carousel: prev.carousel.map((c, idx) =>
+                      idx === carouselIndex ? { ...c, imageDataUrl: undefined } : c,
+                    ),
+                  }));
+                  flash("Carousel image removed.");
+                } catch {
+                  /* hook error */
+                }
               }}
             />
           </div>
@@ -290,9 +320,9 @@ export function MediaStudioClient() {
 
       <button
         type="button"
-        onClick={() => {
+        onClick={async () => {
           if (confirm("Reset all sales media (video, slides, ads, carousel)?")) {
-            reset();
+            await reset();
             flash("Sales media reset to defaults.");
           }
         }}

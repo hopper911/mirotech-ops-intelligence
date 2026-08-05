@@ -11,9 +11,15 @@ import {
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 
-export function useSalesMedia() {
+type Options = {
+  /** Server-gated admin surfaces (e.g. Media Studio) — do not wait on client session. */
+  allowEdit?: boolean;
+};
+
+export function useSalesMedia(options: Options = {}) {
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const canEdit = Boolean(options.allowEdit) || isAdmin;
   const [media, setMedia] = useState<SalesMedia>(() => cloneSalesMedia(DEFAULT_SALES_MEDIA));
   const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,42 +45,58 @@ export function useSalesMedia() {
   }, []);
 
   const update = useCallback(
-    (updater: (prev: SalesMedia) => SalesMedia) => {
-      if (!isAdmin) return;
+    async (updater: (prev: SalesMedia) => SalesMedia) => {
+      if (!canEdit) {
+        const message =
+          status === "loading"
+            ? "Session still loading — try the upload again in a moment."
+            : "Sign in as admin to edit media.";
+        setError(message);
+        throw new Error(message);
+      }
+
+      let previous: SalesMedia = media;
+      let next: SalesMedia = media;
       setMedia((prev) => {
-        const next = cloneSalesMedia(updater(prev));
-        void saveSalesMedia(next)
-          .then(() => setError(null))
-          .catch((err) => {
-            const message =
-              err instanceof Error
-                ? err.message
-                : "Could not save media. Try a smaller image or reset media.";
-            setError(message);
-          });
+        previous = prev;
+        next = cloneSalesMedia(updater(prev));
         return next;
       });
+
+      try {
+        await saveSalesMedia(next);
+        setError(null);
+        return next;
+      } catch (err) {
+        setMedia(previous);
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Could not save media. Try a smaller image or reset media.";
+        setError(message);
+        throw new Error(message);
+      }
     },
-    [isAdmin],
+    [canEdit, media, status],
   );
 
-  const reset = useCallback(() => {
-    if (!isAdmin) return;
-    void clearSalesMedia()
-      .then(() => {
-        setMedia(cloneSalesMedia(DEFAULT_SALES_MEDIA));
-        setError(null);
-      })
-      .catch(() => {
-        setMedia(cloneSalesMedia(DEFAULT_SALES_MEDIA));
-        setError("Could not clear stored media.");
-      });
-  }, [isAdmin]);
+  const reset = useCallback(async () => {
+    if (!canEdit) return;
+    try {
+      await clearSalesMedia();
+      setMedia(cloneSalesMedia(DEFAULT_SALES_MEDIA));
+      setError(null);
+    } catch {
+      setMedia(cloneSalesMedia(DEFAULT_SALES_MEDIA));
+      setError("Could not clear stored media.");
+    }
+  }, [canEdit]);
 
   return {
     media,
     hydrated,
-    isAdmin,
+    isAdmin: canEdit,
+    canEdit,
     error,
     clearError: () => setError(null),
     sessionLoading: status === "loading",
