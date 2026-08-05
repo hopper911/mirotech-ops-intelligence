@@ -10,7 +10,8 @@ export default auth((req) => {
   }
 
   const isDataStudio = req.nextUrl.pathname.startsWith("/app/data");
-  if (isDataStudio && !isAdminSession(req.auth)) {
+  const isMediaStudio = req.nextUrl.pathname.startsWith("/app/media");
+  if ((isDataStudio || isMediaStudio) && !isAdminSession(req.auth)) {
     return NextResponse.redirect(new URL("/app", req.nextUrl.origin));
   }
 

@@ -1,12 +1,11 @@
 "use client";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { ImageUploadButton } from "@/components/sales/MediaUpload";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { useState } from "react";
 
 export default function AdsPage() {
-  const { media, hydrated, isAdmin, update } = useSalesMedia();
+  const { media, hydrated } = useSalesMedia();
   const [carouselIndex, setCarouselIndex] = useState(0);
   const frame = media.carousel[carouselIndex] ?? media.carousel[0];
 
@@ -17,7 +16,6 @@ export default function AdsPage() {
         <h1 className="mt-3 text-3xl font-semibold text-white">Ad mocks</h1>
         <p className="mt-2 text-sm text-muted">
           Three LinkedIn ads + a four-frame carousel. Portfolio frames only.
-          {isAdmin ? " Signed in as admin — you can upload images." : ""}
         </p>
 
         {!hydrated ? (
@@ -58,30 +56,6 @@ export default function AdsPage() {
                         </div>
                       </div>
                     </div>
-                    {isAdmin ? (
-                      <div className="mt-3">
-                        <ImageUploadButton
-                          label="Upload ad image"
-                          hasImage={Boolean(ad.imageDataUrl)}
-                          onUploaded={(url) =>
-                            update((prev) => ({
-                              ...prev,
-                              linkedInAds: prev.linkedInAds.map((a) =>
-                                a.id === ad.id ? { ...a, imageDataUrl: url } : a,
-                              ),
-                            }))
-                          }
-                          onClear={() =>
-                            update((prev) => ({
-                              ...prev,
-                              linkedInAds: prev.linkedInAds.map((a) =>
-                                a.id === ad.id ? { ...a, imageDataUrl: undefined } : a,
-                              ),
-                            }))
-                          }
-                        />
-                      </div>
-                    ) : null}
                   </article>
                 ))}
               </div>
@@ -139,32 +113,6 @@ export default function AdsPage() {
                     <p className="mt-2 max-w-lg text-xl font-semibold text-white sm:text-2xl">
                       {frame.line}
                     </p>
-                    {isAdmin ? (
-                      <div className="mt-4">
-                        <ImageUploadButton
-                          label="Upload carousel image"
-                          hasImage={Boolean(frame.imageDataUrl)}
-                          onUploaded={(url) =>
-                            update((prev) => ({
-                              ...prev,
-                              carousel: prev.carousel.map((c, idx) =>
-                                idx === carouselIndex ? { ...c, imageDataUrl: url } : c,
-                              ),
-                            }))
-                          }
-                          onClear={() =>
-                            update((prev) => ({
-                              ...prev,
-                              carousel: prev.carousel.map((c, idx) =>
-                                idx === carouselIndex
-                                  ? { ...c, imageDataUrl: undefined }
-                                  : c,
-                              ),
-                            }))
-                          }
-                        />
-                      </div>
-                    ) : null}
                   </div>
                 </div>
                 <div className="flex gap-2 border-t border-white/10 p-3">

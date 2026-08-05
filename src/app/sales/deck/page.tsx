@@ -1,12 +1,11 @@
 "use client";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { ImageUploadButton } from "@/components/sales/MediaUpload";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
 import { useState } from "react";
 
 export default function DeckPage() {
-  const { media, hydrated, isAdmin, update } = useSalesMedia();
+  const { media, hydrated } = useSalesMedia();
   const [i, setI] = useState(0);
   const slides = media.slides;
   const slide = slides[i] ?? slides[0];
@@ -31,28 +30,6 @@ export default function DeckPage() {
             <div className="flex flex-col justify-center p-8 sm:p-10">
               <h2 className="text-3xl font-semibold text-white">{slide.title}</h2>
               <p className="mt-4 max-w-xl text-lg text-muted">{slide.body}</p>
-              {isAdmin ? (
-                <div className="mt-6">
-                  <ImageUploadButton
-                    label="Upload slide image"
-                    hasImage={Boolean(slide.imageDataUrl)}
-                    onUploaded={(url) =>
-                      update((prev) => {
-                        const next = [...prev.slides];
-                        next[i] = { ...next[i], imageDataUrl: url };
-                        return { ...prev, slides: next };
-                      })
-                    }
-                    onClear={() =>
-                      update((prev) => {
-                        const next = [...prev.slides];
-                        next[i] = { ...next[i], imageDataUrl: undefined };
-                        return { ...prev, slides: next };
-                      })
-                    }
-                  />
-                </div>
-              ) : null}
             </div>
             <div className="relative min-h-[14rem] border-t border-white/10 bg-navy/40 lg:border-l lg:border-t-0">
               {slide.imageDataUrl ? (
@@ -64,7 +41,7 @@ export default function DeckPage() {
                 />
               ) : (
                 <div className="flex h-full min-h-[14rem] items-center justify-center p-6 text-center text-xs text-muted">
-                  {isAdmin ? "Upload an image for this slide" : "Slide visual"}
+                  Slide visual
                 </div>
               )}
             </div>

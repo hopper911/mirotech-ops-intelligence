@@ -1,7 +1,6 @@
 "use client";
 
 import { NetworkHero } from "@/components/brand/NetworkHero";
-import { VideoUploadControls } from "@/components/sales/MediaUpload";
 import { Reveal } from "@/components/motion/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useSalesMedia } from "@/hooks/useSalesMedia";
@@ -9,7 +8,7 @@ import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 
 export function HomeHero() {
-  const { media, isAdmin, update, reset } = useSalesMedia();
+  const { media } = useSalesMedia();
   const videoUrl = media.backgroundVideoUrl?.trim();
 
   return (
@@ -73,29 +72,6 @@ export function HomeHero() {
               Sample concept · Northline Commerce workspace · not live billing data
             </p>
           </Reveal>
-
-          {isAdmin ? (
-            <div className="glass mt-8 rounded-2xl p-4">
-              <div className="text-[10px] uppercase tracking-[0.14em] text-green">
-                Admin · hero background video
-              </div>
-              <div className="mt-3">
-                <VideoUploadControls
-                  value={media.backgroundVideoUrl}
-                  onChange={(url) => update((prev) => ({ ...prev, backgroundVideoUrl: url }))}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm("Reset all sales media (slides, ads, carousel, video)?")) reset();
-                }}
-                className="mt-3 text-xs text-muted hover:text-white"
-              >
-                Reset sales media defaults
-              </button>
-            </div>
-          ) : null}
         </div>
 
         <Reveal delay={0.25} className="relative hidden min-h-[280px] lg:block">

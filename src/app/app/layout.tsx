@@ -38,9 +38,14 @@ export default async function AppLayout({
               </div>
             ) : null}
             {isAdmin ? (
-              <Link href="/app/data" className="mt-2 block text-sm text-green hover:underline">
-                Data Studio
-              </Link>
+              <>
+                <Link href="/app/data" className="mt-2 block text-sm text-green hover:underline">
+                  Data Studio
+                </Link>
+                <Link href="/app/media" className="mt-1 block text-sm text-green hover:underline">
+                  Media Studio
+                </Link>
+              </>
             ) : null}
             <Link href="/app/notifications" className="mt-1 block text-sm text-cyan hover:underline">
               Alerts

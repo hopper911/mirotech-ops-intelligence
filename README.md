@@ -23,17 +23,18 @@ npm run dev
 ```
 
 Demo login: `demo@mirotech.io` / `ops-demo`  
-Admin (Data Studio + sales media uploads): `admin@mirotech.io` / `12345mirotech`
+Admin (Data Studio + Media Studio): `admin@mirotech.io` / `12345mirotech`
 
-## Sales media (admin)
+## Media Studio (admin)
 
-When signed in as admin, you can:
+At **`/app/media`** (admin only), upload:
 
-- Upload images on each **sales deck** slide (`/sales/deck`)
-- Upload images for **three LinkedIn ads** and the **four-side carousel** (`/sales/ads`)
-- Set a **homepage background video** via URL or short upload (≤4MB) on `/`
+- Homepage hero background video (URL or ≤4MB file)
+- Sales deck slide images
+- Three LinkedIn ad images
+- Four-side carousel images
 
-Media is stored in browser localStorage (`mirotech.sales.media`). Clients never see upload controls.
+Public pages (`/`, `/sales/deck`, `/sales/ads`) only display media — no upload UI. Stored in browser localStorage (`mirotech.sales.media`).
 
 ## Product routes (sign-in required)
 
@@ -48,6 +49,7 @@ Media is stored in browser localStorage (`mirotech.sales.media`). Clients never 
 | `/app/forecast` | Savings forecast |
 | `/app/assistant` | AI assistant |
 | `/app/data` | Data Studio (**admin only**) |
+| `/app/media` | Media Studio (**admin only**) |
 | `/app/notifications` | Anomaly alerts |
 | `/app/onboarding` | Guided onboarding |
 
