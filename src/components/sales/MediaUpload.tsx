@@ -13,8 +13,8 @@ export function ImageUploadButton({
   hasImage,
 }: {
   label?: string;
-  onUploaded: (dataUrl: string) => void;
-  onClear?: () => void;
+  onUploaded: (dataUrl: string) => void | Promise<void>;
+  onClear?: () => void | Promise<void>;
   hasImage?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +39,7 @@ export function ImageUploadButton({
               throw new Error("File too large (max 8MB).");
             }
             const url = await compressImageFile(file);
-            onUploaded(url);
+            await onUploaded(url);
           } catch (err) {
             setError(err instanceof Error ? err.message : "Upload failed");
           } finally {
@@ -53,13 +53,23 @@ export function ImageUploadButton({
         onClick={() => inputRef.current?.click()}
         className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10 disabled:opacity-50"
       >
-        {busy ? "Processing…" : label}
+        {busy ? "Saving…" : label}
       </button>
       {hasImage && onClear ? (
         <button
           type="button"
           disabled={busy}
-          onClick={onClear}
+          onClick={async () => {
+            setBusy(true);
+            setError(null);
+            try {
+              await onClear();
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Remove failed");
+            } finally {
+              setBusy(false);
+            }
+          }}
           className="rounded-full border border-white/15 px-3 py-1 text-xs text-muted hover:text-white disabled:opacity-50"
         >
           Remove
@@ -75,10 +85,11 @@ export function VideoUploadControls({
   onChange,
 }: {
   value?: string;
-  onChange: (url: string) => void;
+  onChange: (url: string) => void | Promise<void>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   return (
     <div className="space-y-2">
@@ -88,7 +99,8 @@ export function VideoUploadControls({
           type="url"
           value={value?.startsWith("data:") ? "" : value ?? ""}
           placeholder="https://… or /videos/hero.mp4"
-          onChange={(e) => onChange(e.target.value)}
+          disabled={busy}
+          onChange={(e) => void onChange(e.target.value)}
           className="mt-1 w-full rounded-lg border border-white/10 bg-navy/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan/40"
         />
       </label>
@@ -103,30 +115,35 @@ export function VideoUploadControls({
             e.target.value = "";
             if (!file) return;
             setError(null);
+            setBusy(true);
             try {
               const url = await readFileAsDataUrl(file, VIDEO_MAX);
-              onChange(url);
+              await onChange(url);
             } catch (err) {
               setError(
                 err instanceof Error
                   ? `${err.message} Prefer a hosted URL for larger files.`
                   : "Upload failed",
               );
+            } finally {
+              setBusy(false);
             }
           }}
         />
         <button
           type="button"
+          disabled={busy}
           onClick={() => inputRef.current?.click()}
-          className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10"
+          className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10 disabled:opacity-50"
         >
-          Upload short video (≤4MB)
+          {busy ? "Saving…" : "Upload short video (≤4MB)"}
         </button>
         {value ? (
           <button
             type="button"
-            onClick={() => onChange("")}
-            className="rounded-full border border-white/15 px-3 py-1 text-xs text-muted hover:text-white"
+            disabled={busy}
+            onClick={() => void onChange("")}
+            className="rounded-full border border-white/15 px-3 py-1 text-xs text-muted hover:text-white disabled:opacity-50"
           >
             Clear video
           </button>

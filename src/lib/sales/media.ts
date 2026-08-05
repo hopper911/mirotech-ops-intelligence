@@ -1,9 +1,9 @@
 export const SALES_MEDIA_KEY = "mirotech.sales.media";
-const IDB_NAME = "mirotech-sales-media";
+const IDB_NAME = "mirotech-sales-media-v3";
 const IDB_STORE = "media";
 const IDB_BLOBS = "blobs";
 const IDB_KEY = "current";
-const IDB_VERSION = 2;
+const IDB_VERSION = 1;
 
 export type SlideMedia = {
   title: string;
@@ -29,7 +29,6 @@ export type SalesMedia = {
   slides: SlideMedia[];
   linkedInAds: LinkedInAd[];
   carousel: CarouselFrame[];
-  /** Absolute URL, site path, or small data: URL */
   backgroundVideoUrl?: string;
 };
 
@@ -106,7 +105,12 @@ export const DEFAULT_SALES_MEDIA: SalesMedia = {
 };
 
 export function cloneSalesMedia(data: SalesMedia): SalesMedia {
-  return structuredClone(data);
+  return {
+    slides: data.slides.map((s) => ({ ...s })),
+    linkedInAds: data.linkedInAds.map((a) => ({ ...a })),
+    carousel: data.carousel.map((c) => ({ ...c })),
+    backgroundVideoUrl: data.backgroundVideoUrl ?? "",
+  };
 }
 
 function mergeWithDefaults(parsed: Partial<SalesMedia>): SalesMedia {
@@ -114,11 +118,9 @@ function mergeWithDefaults(parsed: Partial<SalesMedia>): SalesMedia {
   const slides =
     parsed.slides?.length === defaults.slides.length
       ? defaults.slides.map((slide, i) => ({
-          ...slide,
-          ...parsed.slides![i],
           title: parsed.slides![i]?.title || slide.title,
           body: parsed.slides![i]?.body || slide.body,
-          imageDataUrl: parsed.slides![i]?.imageDataUrl || undefined,
+          imageDataUrl: parsed.slides![i]?.imageDataUrl,
         }))
       : defaults.slides;
 
@@ -126,13 +128,11 @@ function mergeWithDefaults(parsed: Partial<SalesMedia>): SalesMedia {
     const saved = parsed.linkedInAds?.find((a) => a.id === ad.id) ?? parsed.linkedInAds?.[i];
     return saved
       ? {
-          ...ad,
-          ...saved,
           id: ad.id,
           headline: saved.headline || ad.headline,
           body: saved.body || ad.body,
           cta: saved.cta || ad.cta,
-          imageDataUrl: saved.imageDataUrl || undefined,
+          imageDataUrl: saved.imageDataUrl,
         }
       : ad;
   });
@@ -141,11 +141,9 @@ function mergeWithDefaults(parsed: Partial<SalesMedia>): SalesMedia {
     const saved = parsed.carousel?.find((c) => c.id === frame.id) ?? parsed.carousel?.[i];
     return saved
       ? {
-          ...frame,
-          ...saved,
           id: frame.id,
           line: saved.line || frame.line,
-          imageDataUrl: saved.imageDataUrl || undefined,
+          imageDataUrl: saved.imageDataUrl,
         }
       : frame;
   });
@@ -163,152 +161,195 @@ function openDb(): Promise<IDBDatabase> {
     const req = indexedDB.open(IDB_NAME, IDB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-      if (!db.objectStoreNames.contains(IDB_BLOBS)) {
-        db.createObjectStore(IDB_BLOBS);
-      }
+      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      if (!db.objectStoreNames.contains(IDB_BLOBS)) db.createObjectStore(IDB_BLOBS);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error ?? new Error("IndexedDB open failed"));
   });
 }
 
-function idbGetValue<T>(store: IDBObjectStore, key: string): Promise<T | undefined> {
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(",");
+  const mime = /data:([^;]+)/.exec(header ?? "")?.[1] ?? "application/octet-stream";
+  const binary = atob(base64 ?? "");
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
-    const req = store.get(key);
-    req.onsuccess = () => resolve(req.result as T | undefined);
-    req.onerror = () => reject(req.error ?? new Error("IndexedDB read failed"));
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read stored image."));
+    reader.readAsDataURL(blob);
   });
 }
 
-async function idbGet(): Promise<SalesMedia | null> {
-  try {
-    const db = await openDb();
-    const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readonly");
-    const mediaStore = tx.objectStore(IDB_STORE);
-    const blobStore = tx.objectStore(IDB_BLOBS);
+type MetaRecord = {
+  slides: { title: string; body: string }[];
+  linkedInAds: { id: string; headline: string; body: string; cta: string }[];
+  carousel: { id: string; line: string }[];
+  backgroundVideoUrl: string;
+};
 
-    const raw = await idbGetValue<SalesMedia & { _splitBlobs?: boolean }>(mediaStore, IDB_KEY);
-    if (!raw) return null;
+/** All IDB requests are issued synchronously so the transaction stays alive. */
+function idbGet(): Promise<SalesMedia | null> {
+  return openDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readonly");
+        const mediaStore = tx.objectStore(IDB_STORE);
+        const blobStore = tx.objectStore(IDB_BLOBS);
 
-    // Legacy v1: full document with embedded data URLs
-    if (!raw._splitBlobs) {
-      return mergeWithDefaults(raw);
-    }
+        const metaReq = mediaStore.get(IDB_KEY);
+        // Issue every get in the same tick so the transaction does not auto-close.
+        const slideReqs = Array.from({ length: 10 }, (_, i) => blobStore.get(`slide:${i}`));
+        const adIds = ["ad-1", "ad-2", "ad-3"] as const;
+        const adReqs = Object.fromEntries(adIds.map((id) => [id, blobStore.get(`ad:${id}`)]));
+        const carIds = ["c1", "c2", "c3", "c4"] as const;
+        const carReqs = Object.fromEntries(carIds.map((id) => [id, blobStore.get(`carousel:${id}`)]));
+        const videoReq = blobStore.get("video");
 
-    const merged = mergeWithDefaults(raw);
-    await Promise.all(
-      merged.slides.map(async (_, i) => {
-        const blob = await idbGetValue<string>(blobStore, `slide:${i}`);
-        if (blob) merged.slides[i] = { ...merged.slides[i], imageDataUrl: blob };
-      }),
-    );
-    await Promise.all(
-      merged.linkedInAds.map(async (ad) => {
-        const blob = await idbGetValue<string>(blobStore, `ad:${ad.id}`);
-        if (blob) {
-          const idx = merged.linkedInAds.findIndex((a) => a.id === ad.id);
-          if (idx >= 0) {
-            merged.linkedInAds[idx] = { ...merged.linkedInAds[idx], imageDataUrl: blob };
+        tx.onerror = () => reject(tx.error ?? new Error("IndexedDB read failed"));
+
+        tx.oncomplete = () => {
+          const meta = metaReq.result as MetaRecord | undefined;
+          if (!meta) {
+            resolve(null);
+            return;
           }
+
+          void (async () => {
+            try {
+              async function readStored(stored: unknown): Promise<string | undefined> {
+                if (stored instanceof Blob) return blobToDataUrl(stored);
+                if (typeof stored === "string" && stored.startsWith("data:")) return stored;
+                return undefined;
+              }
+
+              const slides = await Promise.all(
+                meta.slides.map(async (slide, i) => ({
+                  ...slide,
+                  imageDataUrl: await readStored(slideReqs[i]?.result),
+                })),
+              );
+
+              const linkedInAds = await Promise.all(
+                meta.linkedInAds.map(async (ad) => ({
+                  ...ad,
+                  imageDataUrl: await readStored(adReqs[ad.id]?.result),
+                })),
+              );
+
+              const carousel = await Promise.all(
+                meta.carousel.map(async (frame) => ({
+                  ...frame,
+                  imageDataUrl: await readStored(carReqs[frame.id]?.result),
+                })),
+              );
+
+              let backgroundVideoUrl = meta.backgroundVideoUrl || "";
+              const videoStored = videoReq.result;
+              if (videoStored instanceof Blob) {
+                backgroundVideoUrl = await blobToDataUrl(videoStored);
+              } else if (typeof videoStored === "string") {
+                backgroundVideoUrl = videoStored;
+              }
+
+              resolve(mergeWithDefaults({ slides, linkedInAds, carousel, backgroundVideoUrl }));
+            } catch (err) {
+              reject(err);
+            }
+          })();
+        };
+      }),
+  );
+}
+
+function idbSet(data: SalesMedia): Promise<void> {
+  return openDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readwrite");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error ?? new Error("IndexedDB write failed"));
+        tx.onabort = () =>
+          reject(
+            tx.error ??
+              new Error("Storage full or blocked. Try a smaller JPEG/PNG under 2MB."),
+          );
+
+        const mediaStore = tx.objectStore(IDB_STORE);
+        const blobStore = tx.objectStore(IDB_BLOBS);
+
+        const meta: MetaRecord = {
+          slides: data.slides.map(({ title, body }) => ({ title, body })),
+          linkedInAds: data.linkedInAds.map(({ id, headline, body, cta }) => ({
+            id,
+            headline,
+            body,
+            cta,
+          })),
+          carousel: data.carousel.map(({ id, line }) => ({ id, line })),
+          backgroundVideoUrl: data.backgroundVideoUrl?.startsWith("data:")
+            ? ""
+            : data.backgroundVideoUrl ?? "",
+        };
+        mediaStore.put(meta, IDB_KEY);
+
+        data.slides.forEach((slide, i) => {
+          const key = `slide:${i}`;
+          if (slide.imageDataUrl?.startsWith("data:")) {
+            blobStore.put(dataUrlToBlob(slide.imageDataUrl), key);
+          } else {
+            blobStore.delete(key);
+          }
+        });
+
+        data.linkedInAds.forEach((ad) => {
+          const key = `ad:${ad.id}`;
+          if (ad.imageDataUrl?.startsWith("data:")) {
+            blobStore.put(dataUrlToBlob(ad.imageDataUrl), key);
+          } else {
+            blobStore.delete(key);
+          }
+        });
+
+        data.carousel.forEach((frame) => {
+          const key = `carousel:${frame.id}`;
+          if (frame.imageDataUrl?.startsWith("data:")) {
+            blobStore.put(dataUrlToBlob(frame.imageDataUrl), key);
+          } else {
+            blobStore.delete(key);
+          }
+        });
+
+        if (data.backgroundVideoUrl?.startsWith("data:")) {
+          blobStore.put(dataUrlToBlob(data.backgroundVideoUrl), "video");
+        } else {
+          blobStore.delete("video");
         }
       }),
-    );
-    await Promise.all(
-      merged.carousel.map(async (frame) => {
-        const blob = await idbGetValue<string>(blobStore, `carousel:${frame.id}`);
-        if (blob) {
-          const idx = merged.carousel.findIndex((c) => c.id === frame.id);
-          if (idx >= 0) {
-            merged.carousel[idx] = { ...merged.carousel[idx], imageDataUrl: blob };
-          }
-        }
-      }),
-    );
-    const videoBlob = await idbGetValue<string>(blobStore, "video");
-    if (videoBlob) merged.backgroundVideoUrl = videoBlob;
-
-    return merged;
-  } catch {
-    return null;
-  }
+  );
 }
 
-function stripEmbeddedBlobs(data: SalesMedia): SalesMedia & { _splitBlobs: true } {
-  return {
-    slides: data.slides.map(({ title, body }) => ({ title, body })),
-    linkedInAds: data.linkedInAds.map(({ id, headline, body, cta }) => ({
-      id,
-      headline,
-      body,
-      cta,
-    })),
-    carousel: data.carousel.map(({ id, line }) => ({ id, line })),
-    backgroundVideoUrl: data.backgroundVideoUrl?.startsWith("data:")
-      ? ""
-      : data.backgroundVideoUrl ?? "",
-    _splitBlobs: true,
-  };
+function idbClear(): Promise<void> {
+  return openDb()
+    .then(
+      (db) =>
+        new Promise<void>((resolve, reject) => {
+          const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readwrite");
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error ?? new Error("IndexedDB clear failed"));
+          tx.objectStore(IDB_STORE).clear();
+          tx.objectStore(IDB_BLOBS).clear();
+        }),
+    )
+    .catch(() => undefined);
 }
 
-async function idbSet(data: SalesMedia): Promise<void> {
-  const db = await openDb();
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readwrite");
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error ?? new Error("IndexedDB write failed"));
-    tx.onabort = () =>
-      reject(tx.error ?? new Error("IndexedDB write aborted (storage full?). Try smaller images."));
-
-    const mediaStore = tx.objectStore(IDB_STORE);
-    const blobStore = tx.objectStore(IDB_BLOBS);
-
-    mediaStore.put(stripEmbeddedBlobs(data), IDB_KEY);
-
-    data.slides.forEach((slide, i) => {
-      const key = `slide:${i}`;
-      if (slide.imageDataUrl) blobStore.put(slide.imageDataUrl, key);
-      else blobStore.delete(key);
-    });
-
-    data.linkedInAds.forEach((ad) => {
-      const key = `ad:${ad.id}`;
-      if (ad.imageDataUrl) blobStore.put(ad.imageDataUrl, key);
-      else blobStore.delete(key);
-    });
-
-    data.carousel.forEach((frame) => {
-      const key = `carousel:${frame.id}`;
-      if (frame.imageDataUrl) blobStore.put(frame.imageDataUrl, key);
-      else blobStore.delete(key);
-    });
-
-    if (data.backgroundVideoUrl?.startsWith("data:")) {
-      blobStore.put(data.backgroundVideoUrl, "video");
-    } else {
-      blobStore.delete("video");
-    }
-  });
-}
-
-async function idbClear(): Promise<void> {
-  try {
-    const db = await openDb();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction([IDB_STORE, IDB_BLOBS], "readwrite");
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error("IndexedDB clear failed"));
-      tx.objectStore(IDB_STORE).clear();
-      tx.objectStore(IDB_BLOBS).clear();
-    });
-  } catch {
-    /* ignore */
-  }
-}
-
-/** Sync fallback for first paint; prefer loadSalesMediaAsync. */
 export function loadSalesMedia(): SalesMedia {
   if (typeof window === "undefined") return cloneSalesMedia(DEFAULT_SALES_MEDIA);
   try {
@@ -322,8 +363,12 @@ export function loadSalesMedia(): SalesMedia {
 
 export async function loadSalesMediaAsync(): Promise<SalesMedia> {
   if (typeof window === "undefined") return cloneSalesMedia(DEFAULT_SALES_MEDIA);
-  const fromIdb = await idbGet();
-  if (fromIdb) return fromIdb;
+  try {
+    const fromIdb = await idbGet();
+    if (fromIdb) return fromIdb;
+  } catch {
+    /* fall through */
+  }
 
   const legacy = loadSalesMedia();
   const hasMedia =
@@ -336,7 +381,7 @@ export async function loadSalesMediaAsync(): Promise<SalesMedia> {
       await idbSet(legacy);
       localStorage.removeItem(SALES_MEDIA_KEY);
     } catch {
-      /* keep legacy until next save */
+      /* keep legacy */
     }
   }
   return legacy;
@@ -360,47 +405,36 @@ export async function clearSalesMedia(): Promise<void> {
   }
 }
 
-/** Compress image to JPEG data URL to keep storage lean. */
-export function compressImageFile(file: File, maxWidth = 1400, quality = 0.78): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!file.type.startsWith("image/") && file.type !== "") {
-      reject(new Error("Please choose an image file."));
-      return;
-    }
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxWidth / Math.max(img.width, 1));
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Could not process image."));
-          return;
-        }
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        URL.revokeObjectURL(objectUrl);
-        resolve(dataUrl);
-      } catch (err) {
-        URL.revokeObjectURL(objectUrl);
-        reject(err instanceof Error ? err : new Error("Could not process image."));
-      }
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      // Fallback: raw data URL (may be larger)
-      void readFileAsDataUrl(file, 8 * 1024 * 1024).then(resolve).catch(reject);
-    };
-    img.src = objectUrl;
-  });
+/** Compress image to JPEG data URL. Falls back to raw FileReader. */
+export async function compressImageFile(
+  file: File,
+  maxWidth = 1600,
+  quality = 0.82,
+): Promise<string> {
+  if (file.size > 8 * 1024 * 1024) {
+    throw new Error("File too large (max 8MB).");
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxWidth / Math.max(bitmap.width, 1));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not process image.");
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    if (!dataUrl.startsWith("data:image/")) throw new Error("Could not encode image.");
+    return dataUrl;
+  } catch {
+    return readFileAsDataUrl(file, 8 * 1024 * 1024);
+  }
 }
 
-/** Read file as data URL; rejects oversized files. */
 export function readFileAsDataUrl(file: File, maxBytes: number): Promise<string> {
   return new Promise((resolve, reject) => {
     if (file.size > maxBytes) {
@@ -408,7 +442,14 @@ export function readFileAsDataUrl(file: File, maxBytes: number): Promise<string>
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
+    reader.onload = () => {
+      const result = String(reader.result ?? "");
+      if (!result.startsWith("data:")) {
+        reject(new Error("Could not read file."));
+        return;
+      }
+      resolve(result);
+    };
     reader.onerror = () => reject(new Error("Could not read file."));
     reader.readAsDataURL(file);
   });
@@ -417,7 +458,7 @@ export function readFileAsDataUrl(file: File, maxBytes: number): Promise<string>
 export function isDisplayableMediaUrl(url?: string): boolean {
   if (!url || typeof url !== "string") return false;
   const trimmed = url.trim();
-  if (!trimmed || trimmed.length > 12_000_000) return false;
+  if (!trimmed || trimmed.length > 16_000_000) return false;
   const lower = trimmed.toLowerCase();
   if (
     lower.startsWith("javascript:") ||
@@ -430,6 +471,7 @@ export function isDisplayableMediaUrl(url?: string): boolean {
   return (
     lower.startsWith("data:image/") ||
     lower.startsWith("data:video/") ||
+    lower.startsWith("blob:") ||
     lower.startsWith("https://") ||
     trimmed.startsWith("/")
   );
