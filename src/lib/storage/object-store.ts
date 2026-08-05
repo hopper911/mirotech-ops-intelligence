@@ -61,8 +61,11 @@ export async function getObjectText(key: string): Promise<string | null> {
     return buf ? buf.toString("utf8") : null;
   }
 
-  const { blobs } = await list({ prefix: cleanKey, limit: 20 });
-  const match = blobs.find((b) => b.pathname === cleanKey);
+  const { blobs } = await list({ prefix: cleanKey, limit: 50 });
+  const matches = blobs
+    .filter((b) => b.pathname === cleanKey)
+    .sort((a, b) => +new Date(b.uploadedAt) - +new Date(a.uploadedAt));
+  const match = matches[0];
   if (!match) return null;
   const res = await fetch(match.url, { cache: "no-store" });
   if (!res.ok) return null;
