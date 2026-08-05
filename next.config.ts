@@ -25,7 +25,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "media-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https:",
+      "connect-src 'self' https: https://*.blob.vercel-storage.com https://*.r2.cloudflarestorage.com https://*.r2.dev",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

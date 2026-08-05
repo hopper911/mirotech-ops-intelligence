@@ -11,7 +11,8 @@ export default auth((req) => {
 
   const isDataStudio = req.nextUrl.pathname.startsWith("/app/data");
   const isMediaStudio = req.nextUrl.pathname.startsWith("/app/media");
-  if ((isDataStudio || isMediaStudio) && !isAdminSession(req.auth)) {
+  const isR2 = req.nextUrl.pathname.startsWith("/app/r2");
+  if ((isDataStudio || isMediaStudio || isR2) && !isAdminSession(req.auth)) {
     return NextResponse.redirect(new URL("/app", req.nextUrl.origin));
   }
 

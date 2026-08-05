@@ -37,12 +37,14 @@ Anomaly investigation (Moment challenge): **Summary → Cost spike → Cause →
 
 At **`/app/media`** (admin only), upload:
 
-- Homepage hero background video (URL or ≤4MB file)
+- Homepage hero background video (URL or short file)
 - Sales deck slide images
 - Three LinkedIn ad images
 - Four-side carousel images
 
-Public pages (`/`, `/sales/deck`, `/sales/ads`) only display media — no upload UI. Stored in browser IndexedDB (`mirotech-sales-media-v4`) on the admin’s device.
+Uploads go to **object storage** (Cloudflare R2 when configured, otherwise Vercel Blob). Media config is stored at `config/sales-media.json` so **every visitor** sees the same hosted URLs on `/`, `/sales/deck`, and `/sales/ads`.
+
+Admin **R2 Storage** browser: `/app/r2` — list/upload/delete objects and confirm backend status.
 
 ## Product routes (sign-in required)
 
@@ -60,6 +62,7 @@ Public pages (`/`, `/sales/deck`, `/sales/ads`) only display media — no upload
 | `/app/assistant` | AI assistant |
 | `/app/data` | Data Studio (**admin only**) |
 | `/app/media` | Media Studio (**admin only**) |
+| `/app/r2` | R2 / object storage browser (**admin only**) |
 | `/app/notifications` | Anomaly alerts |
 | `/app/onboarding` | Guided onboarding |
 

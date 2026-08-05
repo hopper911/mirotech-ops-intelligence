@@ -1,19 +1,21 @@
 "use client";
 
 import {
-  clearSalesMedia,
   cloneSalesMedia,
   DEFAULT_SALES_MEDIA,
-  loadSalesMediaAsync,
-  saveSalesMedia,
   type SalesMedia,
 } from "@/lib/sales/media";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Options = {
-  /** Server-gated admin surfaces — always allow writes. */
   allowEdit?: boolean;
 };
+
+async function fetchMedia(): Promise<SalesMedia> {
+  const res = await fetch("/api/sales-media", { cache: "no-store" });
+  if (!res.ok) return cloneSalesMedia(DEFAULT_SALES_MEDIA);
+  return (await res.json()) as SalesMedia;
+}
 
 export function useSalesMedia(options: Options = {}) {
   const canEdit = Boolean(options.allowEdit);
@@ -21,7 +23,6 @@ export function useSalesMedia(options: Options = {}) {
   const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mediaRef = useRef(media);
-  const loadGen = useRef(0);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -29,22 +30,22 @@ export function useSalesMedia(options: Options = {}) {
   }, [media]);
 
   useEffect(() => {
-    const gen = ++loadGen.current;
-    loadSalesMediaAsync()
+    let cancelled = false;
+    fetchMedia()
       .then((loaded) => {
-        if (loadGen.current !== gen) return;
-        setMedia(loaded);
+        if (cancelled) return;
+        setMedia(cloneSalesMedia(loaded));
         mediaRef.current = loaded;
         setHydrated(true);
       })
-      .catch((err) => {
-        if (loadGen.current !== gen) return;
-        console.error("[sales-media] load failed", err);
-        const empty = cloneSalesMedia(DEFAULT_SALES_MEDIA);
-        setMedia(empty);
-        mediaRef.current = empty;
+      .catch(() => {
+        if (cancelled) return;
+        setMedia(cloneSalesMedia(DEFAULT_SALES_MEDIA));
         setHydrated(true);
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const update = useCallback(
@@ -62,24 +63,32 @@ export function useSalesMedia(options: Options = {}) {
 
       const previous = mediaRef.current;
       const next = cloneSalesMedia(updater(previous));
-      loadGen.current += 1;
       setMedia(next);
       mediaRef.current = next;
       savingRef.current = true;
 
       try {
-        await saveSalesMedia(next);
+        const res = await fetch("/api/sales-media", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(next),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Could not save media.");
+        }
+        const saved = cloneSalesMedia(data as SalesMedia);
+        setMedia(saved);
+        mediaRef.current = saved;
         setError(null);
-        return next;
+        return saved;
       } catch (err) {
         setMedia(previous);
         mediaRef.current = previous;
         const message =
-          err instanceof Error
-            ? err.message
-            : "Could not save media. Try a smaller JPEG/PNG.";
+          err instanceof Error ? err.message : "Could not save media.";
         setError(message);
-        console.error("[sales-media] save failed", err);
         throw new Error(message);
       } finally {
         savingRef.current = false;
@@ -90,15 +99,19 @@ export function useSalesMedia(options: Options = {}) {
 
   const reset = useCallback(async () => {
     if (!canEdit) return;
-    loadGen.current += 1;
     try {
-      await clearSalesMedia();
-      const empty = cloneSalesMedia(DEFAULT_SALES_MEDIA);
+      const res = await fetch("/api/sales-media", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Reset failed.");
+      const empty = cloneSalesMedia(data as SalesMedia);
       setMedia(empty);
       mediaRef.current = empty;
       setError(null);
     } catch {
-      setError("Could not clear stored media.");
+      setError("Could not reset media.");
     }
   }, [canEdit]);
 

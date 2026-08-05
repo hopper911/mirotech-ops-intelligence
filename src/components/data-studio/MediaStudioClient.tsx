@@ -37,8 +37,9 @@ export function MediaStudioClient() {
           <p className="brand-sub text-[10px] text-cyan">Media Studio</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Sales & site media</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Admin only. Upload hero video, deck images, LinkedIn ads, and carousel frames. Public
-            pages show the media — never these controls.
+            Admin only. Upload hero video, deck images, LinkedIn ads, and carousel frames to object
+            storage (R2 when configured, otherwise Vercel Blob). Public pages load the same hosted
+            URLs for every visitor.
           </p>
         </div>
         <SampleDataBadge />
@@ -156,6 +157,7 @@ export function MediaStudioClient() {
           <div className="mt-3">
             <ImageUploadButton
               label="Upload slide image"
+              folder="media/deck"
               hasImage={isDisplayableMediaUrl(slide.imageDataUrl)}
               onUploaded={async (url) => {
                 try {
@@ -209,6 +211,7 @@ export function MediaStudioClient() {
               <div className="mt-3">
                 <ImageUploadButton
                   label="Upload ad image"
+                  folder="media/ads"
                   hasImage={isDisplayableMediaUrl(ad.imageDataUrl)}
                   onUploaded={async (url) => {
                     try {
@@ -287,6 +290,7 @@ export function MediaStudioClient() {
           <div className="mt-3">
             <ImageUploadButton
               label="Upload carousel image"
+              folder="media/carousel"
               hasImage={isDisplayableMediaUrl(frame.imageDataUrl)}
               onUploaded={async (url) => {
                 try {

@@ -1,19 +1,22 @@
 "use client";
 
-import { compressImageFile, readFileAsDataUrl } from "@/lib/sales/media";
+import { isDisplayableMediaUrl, uploadImageFile } from "@/lib/sales/media";
 import { useRef, useState } from "react";
 
 const IMAGE_INPUT_MAX = 8 * 1024 * 1024;
-const VIDEO_MAX = 4 * 1024 * 1024;
+const VIDEO_MAX = 8 * 1024 * 1024;
 
 export function ImageUploadButton({
   label = "Upload image",
+  folder,
   onUploaded,
   onClear,
   hasImage,
 }: {
   label?: string;
-  onUploaded: (dataUrl: string) => void | Promise<void>;
+  /** Object-storage folder, e.g. media/deck or media/ads */
+  folder: string;
+  onUploaded: (url: string) => void | Promise<void>;
   onClear?: () => void | Promise<void>;
   hasImage?: boolean;
 }) {
@@ -38,16 +41,7 @@ export function ImageUploadButton({
             if (file.size > IMAGE_INPUT_MAX) {
               throw new Error("File too large (max 8MB).");
             }
-            if (file.type && !file.type.startsWith("image/")) {
-              throw new Error("Please choose a JPEG, PNG, WebP, or GIF.");
-            }
-            if (file.type === "image/svg+xml") {
-              throw new Error("SVG uploads are not allowed.");
-            }
-            const url = await compressImageFile(file);
-            if (!url.startsWith("data:image/")) {
-              throw new Error("Could not process that image.");
-            }
+            const url = await uploadImageFile(file, folder);
             await onUploaded(url);
           } catch (err) {
             setError(err instanceof Error ? err.message : "Upload failed");
@@ -62,7 +56,7 @@ export function ImageUploadButton({
         onClick={() => inputRef.current?.click()}
         className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10 disabled:opacity-50"
       >
-        {busy ? "Saving…" : label}
+        {busy ? "Uploading…" : label}
       </button>
       {hasImage && onClear ? (
         <button
@@ -126,13 +120,25 @@ export function VideoUploadControls({
             setError(null);
             setBusy(true);
             try {
-              const url = await readFileAsDataUrl(file, VIDEO_MAX);
-              await onChange(url);
+              if (file.size > VIDEO_MAX) {
+                throw new Error("Video too large (max 8MB). Prefer a hosted URL.");
+              }
+              const form = new FormData();
+              form.append("file", file);
+              form.append("folder", "media/video");
+              const res = await fetch("/api/admin/media/upload", {
+                method: "POST",
+                body: form,
+                credentials: "same-origin",
+              });
+              const data = (await res.json()) as { url?: string; error?: string };
+              if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+              await onChange(data.url);
             } catch (err) {
               setError(
                 err instanceof Error
-                  ? `${err.message} Prefer a hosted URL for larger files.`
-                  : "Upload failed",
+                  ? err.message
+                  : "Upload failed. Prefer a hosted URL for larger files.",
               );
             } finally {
               setBusy(false);
@@ -145,7 +151,7 @@ export function VideoUploadControls({
           onClick={() => inputRef.current?.click()}
           className="rounded-full border border-cyan/40 px-3 py-1 text-xs text-cyan hover:bg-cyan/10 disabled:opacity-50"
         >
-          {busy ? "Saving…" : "Upload short video (≤4MB)"}
+          {busy ? "Uploading…" : "Upload short video (≤8MB)"}
         </button>
         {value ? (
           <button
@@ -158,8 +164,8 @@ export function VideoUploadControls({
           </button>
         ) : null}
       </div>
-      {value?.startsWith("data:") ? (
-        <p className="text-[10px] text-muted">Using uploaded video stored in this browser.</p>
+      {value && isDisplayableMediaUrl(value) ? (
+        <p className="text-[10px] text-muted">Using hosted video URL.</p>
       ) : null}
       {error ? <p className="text-xs text-cyan">{error}</p> : null}
     </div>

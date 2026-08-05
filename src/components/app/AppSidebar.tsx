@@ -27,6 +27,7 @@ const nav: {
   { href: "/app/assistant", label: "Assistant", Icon: IconInsights },
   { href: "/app/data", label: "Data Studio", Icon: IconSystems, adminOnly: true },
   { href: "/app/media", label: "Media Studio", Icon: IconInsights, adminOnly: true },
+  { href: "/app/r2", label: "R2 Storage", Icon: IconConnectivity, adminOnly: true },
   { href: "/app/notifications", label: "Alerts", Icon: IconConnectivity },
   { href: "/app/onboarding", label: "Onboarding", Icon: IconSystems },
 ];
