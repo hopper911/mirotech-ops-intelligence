@@ -35,6 +35,9 @@ export const FEATURED_INVESTIGATION_ID = "inv-ai-gpt4o-spike";
 
 export const WORKSPACE_STORAGE_KEY = "mirotech.ops.workspace";
 
+/** Session-scoped overlay for demo (non-admin) approve/dismiss walkthroughs. */
+export const WORKSPACE_SESSION_KEY = "mirotech.ops.session";
+
 const DEFAULT_INVESTIGATIONS: Investigation[] = [
   {
     id: FEATURED_INVESTIGATION_ID,
@@ -629,7 +632,13 @@ export function buildExecutive(workspace: WorkspaceData): ExecutiveDashboard {
     generatedAt: new Date().toISOString(),
     kpis: workspace.kpis,
     spendTrend: workspace.spendTrend,
-    topRecommendations: workspace.recommendations.slice(0, 3),
+    topRecommendations: [...workspace.recommendations]
+      .sort((a, b) => {
+        if (a.status === "open" && b.status !== "open") return -1;
+        if (b.status === "open" && a.status !== "open") return 1;
+        return b.savingsMonthly - a.savingsMonthly;
+      })
+      .slice(0, 3),
     riskNotes: workspace.riskNotes,
     featuredInvestigationId: FEATURED_INVESTIGATION_ID,
   };

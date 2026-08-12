@@ -5,6 +5,12 @@ import { LoadingBlock, StatePanel } from "@/components/app/StatePanel";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
+import {
+  applyInvestigationDecision,
+  approveInvestigationInPlace,
+  decisionActorLabel,
+  dismissInvestigationInPlace,
+} from "@/lib/ops/decisions";
 import type { AuditEvent, Investigation, InvestigationStatus } from "@/lib/ops";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
@@ -21,23 +27,11 @@ const STEPS = [
 
 type StepId = (typeof STEPS)[number]["id"];
 
-const PERSONA_KEY = "mirotech.persona";
-
-function actorLabel() {
-  if (typeof window === "undefined") return "Demo operator";
-  const persona = sessionStorage.getItem(PERSONA_KEY);
-  if (persona === "cfo") return "Founder / CFO (demo)";
-  if (persona === "ops") return "Ops manager (demo)";
-  if (persona === "tech") return "Technical lead (demo)";
-  return "Demo operator";
-}
-
 export function InvestigationCanvas({ investigationId }: { investigationId: string }) {
-  const { workspace, hydrated, canEdit, updateAndSave, updateWorkspace } = useWorkspace();
+  const { workspace, hydrated, updateAndSave } = useWorkspace();
   const reduce = useReducedMotion();
   const liveId = useId();
   const [step, setStep] = useState<StepId>("summary");
-  const [localInv, setLocalInv] = useState<Investigation | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
   const [ownerOverride, setOwnerOverride] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -46,18 +40,16 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
   // Reset local draft when navigating to a different investigation (React-recommended render adjust).
   if (boundId !== investigationId) {
     setBoundId(investigationId);
-    setLocalInv(null);
     setOwnerOverride(null);
     setStep("summary");
     setStatusMsg(null);
   }
 
-  const fromWorkspace = useMemo(
+  const inv = useMemo(
     () => workspace.investigations?.find((i) => i.id === investigationId) ?? null,
     [workspace.investigations, investigationId],
   );
 
-  const inv = localInv?.id === investigationId ? localInv : fromWorkspace;
   const owner = ownerOverride ?? inv?.owner ?? "";
 
   if (!hydrated) {
@@ -84,84 +76,25 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
   const trackingLocked = current.status === "open";
 
   function persist(next: Investigation) {
-    setLocalInv(next);
     setOwnerOverride(next.owner);
-    const updater = (prev: typeof workspace) => ({
-      ...prev,
-      investigations: (prev.investigations ?? []).map((i) => (i.id === next.id ? next : i)),
-      recommendations: prev.recommendations.map((r) =>
-        r.id === next.recommendationId
-          ? {
-              ...r,
-              status:
-                next.status === "approved" || next.status === "tracking"
-                  ? ("approved" as const)
-                  : next.status === "dismissed"
-                    ? ("dismissed" as const)
-                    : r.status,
-              owner: next.owner,
-            }
-          : r,
-      ),
-    });
-    if (canEdit) {
-      updateAndSave(updater);
-    } else {
-      updateWorkspace(updater);
-    }
-  }
-
-  function appendAudit(
-    base: Investigation,
-    action: AuditEvent["action"],
-    note: string,
-  ): Investigation {
-    return {
-      ...base,
-      auditTrail: [
-        ...base.auditTrail,
-        {
-          id: `ae-${Date.now()}`,
-          at: new Date().toISOString(),
-          actor: actorLabel(),
-          action,
-          note,
-        },
-      ],
-    };
+    updateAndSave((prev) => applyInvestigationDecision(prev, next));
   }
 
   function approve() {
-    let next = appendAudit(
-      { ...current, owner, status: "approved" },
-      "assigned",
-      `Owner set to ${owner}.`,
-    );
-    next = appendAudit(next, "approved", "Recommendation approved — tracking unlocked.");
-    next = {
-      ...next,
-      status: "tracking",
-      tracking: {
-        ...next.tracking,
-        observedMonthlySavings: Math.round(next.tracking.expectedMonthlySavings * 0.42),
-        seriesObserved: next.tracking.seriesExpected.map((p, i) => ({
-          label: p.label,
-          value: Number((p.value * (0.35 + i * 0.12)).toFixed(2)),
-        })),
-      },
-    };
-    next = appendAudit(next, "tracking_started", "Expected vs observed savings window opened.");
+    const next = approveInvestigationInPlace(current, {
+      owner,
+      actor: decisionActorLabel(),
+    });
     persist(next);
     setStatusMsg("Approved. Tracking step unlocked with sample observed savings.");
     setStep("tracking");
   }
 
   function dismiss() {
-    const next = appendAudit(
-      { ...current, owner, status: "dismissed" },
-      "dismissed",
-      "Investigation dismissed — no routing change.",
-    );
+    const next = dismissInvestigationInPlace(current, {
+      owner,
+      actor: decisionActorLabel(),
+    });
     persist(next);
     setStatusMsg("Dismissed. Decision recorded in the audit trail.");
   }

@@ -12,8 +12,19 @@ export {
   type WorkspaceData,
 } from "./workspace";
 export {
+  WORKSPACE_SESSION_KEY,
   WORKSPACE_STORAGE_KEY,
 } from "./workspace";
+
+export {
+  applyInvestigationDecision,
+  applyRecommendationStatus,
+  approveInvestigationInPlace,
+  decisionActorLabel,
+  decisionKindLabel,
+  dismissInvestigationInPlace,
+  recommendationDecisionKind,
+} from "./decisions";
 
 export type {
   AiModelUsage,

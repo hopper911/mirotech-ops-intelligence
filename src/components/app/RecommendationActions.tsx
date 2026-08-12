@@ -2,49 +2,43 @@
 
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
+import { applyRecommendationStatus } from "@/lib/ops/decisions";
 import type { Recommendation } from "@/lib/ops";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function RecommendationActions({ recommendation }: { recommendation: Recommendation }) {
-  const { canEdit, updateAndSave } = useWorkspace();
-  const [status, setStatus] = useState(recommendation.status);
+  const { workspace, canEdit, updateAndSave } = useWorkspace();
+  const live =
+    workspace.recommendations.find((r) => r.id === recommendation.id) ?? recommendation;
   const [message, setMessage] = useState<string | null>(null);
 
-  function act(next: "approved" | "dismissed") {
-    if (canEdit) {
-      updateAndSave((prev) => ({
-        ...prev,
-        recommendations: prev.recommendations.map((r) =>
-          r.id === recommendation.id ? { ...r, status: next } : r,
-        ),
-      }));
-      setMessage(
-        next === "approved"
-          ? "Approved and saved to this admin workspace."
-          : "Dismissed and saved to this admin workspace.",
-      );
-    } else {
-      setStatus(next);
-      setMessage(
-        next === "approved"
-          ? "Marked approved (client view — demo only, not saved)."
-          : "Dismissed (client view — demo only, not saved).",
-      );
-    }
-  }
+  useEffect(() => {
+    setMessage(null);
+  }, [live.status]);
 
-  const effectiveStatus = canEdit ? recommendation.status : status;
+  function act(next: "approved" | "dismissed") {
+    updateAndSave((prev) => applyRecommendationStatus(prev, recommendation.id, next));
+    setMessage(
+      next === "approved"
+        ? canEdit
+          ? "Approved and saved to this admin workspace."
+          : "Marked approved — saved for this session."
+        : canEdit
+          ? "Dismissed and saved to this admin workspace."
+          : "Dismissed — saved for this session.",
+    );
+  }
 
   return (
     <div className="glass-app rounded-2xl p-5">
       <div className="text-xs uppercase tracking-[0.14em] text-muted">Actions</div>
       <p className="mt-2 text-sm text-muted">
-        Potential savings {formatUsd(recommendation.savingsMonthly)}/mo · Risk {recommendation.risk}
+        Potential savings {formatUsd(live.savingsMonthly)}/mo · Risk {live.risk}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={effectiveStatus !== "open"}
+          disabled={live.status !== "open"}
           onClick={() => act("approved")}
           className="btn-specular rounded-full bg-green px-4 py-2 text-sm font-semibold text-navy disabled:opacity-40"
         >
@@ -52,7 +46,7 @@ export function RecommendationActions({ recommendation }: { recommendation: Reco
         </button>
         <button
           type="button"
-          disabled={effectiveStatus !== "open"}
+          disabled={live.status !== "open"}
           onClick={() => act("dismissed")}
           className="btn-ghost-glass rounded-full px-4 py-2 text-sm text-white disabled:opacity-40"
         >
@@ -60,7 +54,7 @@ export function RecommendationActions({ recommendation }: { recommendation: Reco
         </button>
       </div>
       <p className="mt-3 text-xs uppercase tracking-[0.12em] text-cyan">
-        Status: {effectiveStatus}
+        Status: {live.status}
       </p>
       {message ? <p className="mt-2 text-sm text-green">{message}</p> : null}
     </div>

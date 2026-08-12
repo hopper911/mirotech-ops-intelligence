@@ -1,7 +1,9 @@
 "use client";
 
+import { DecisionQueue } from "@/components/app/DecisionQueue";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { Sparkline } from "@/components/app/Sparkline";
+import { TeamSpendCue } from "@/components/app/TeamSpendCue";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
 import { buildExecutive, FEATURED_INVESTIGATION_ID } from "@/lib/ops";
@@ -15,24 +17,24 @@ type Persona = "cfo" | "ops" | "tech" | null;
 function personaCopy(persona: Persona) {
   if (persona === "cfo") {
     return {
-      lead: "Financial visibility first — defend the savings forecast and the AI spend spike.",
+      lead: "Financial visibility first — approve savings faster and defend the forecast.",
       highlightId: "savings",
     };
   }
   if (persona === "ops") {
     return {
-      lead: "Ownership and renewals first — watch unused seats and the open investigation.",
+      lead: "Ownership and renewals first — clear the decision queue on seats and risk.",
       highlightId: "risk",
     };
   }
   if (persona === "tech") {
     return {
-      lead: "API anomalies first — inspect the GPT-4o investigation and model routing recommendation.",
+      lead: "API anomalies first — approve routing or open the GPT-4o investigation.",
       highlightId: "spend",
     };
   }
   return {
-    lead: "Spend, savings, risk, and operational health in one glance.",
+    lead: "Decide on optimizations in one place — then drill into spend and forecast.",
     highlightId: null as string | null,
   };
 }
@@ -55,7 +57,6 @@ export default function ExecutivePage() {
   if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
   const dash = buildExecutive(workspace);
   const copy = personaCopy(persona);
-  const featured = workspace.investigations?.find((i) => i.id === FEATURED_INVESTIGATION_ID);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
@@ -70,21 +71,7 @@ export default function ExecutivePage() {
         <SampleDataBadge />
       </header>
 
-      {featured ? (
-        <Link
-          href={`/app/investigations/${featured.id}`}
-          className="glass-app glass-lift block rounded-2xl border border-cyan/30 p-5"
-        >
-          <div className="text-[10px] uppercase tracking-[0.14em] text-cyan">
-            Open investigation · {featured.severity}
-          </div>
-          <h2 className="mt-2 text-lg font-semibold text-white">{featured.title}</h2>
-          <p className="mt-1 line-clamp-2 text-sm text-muted">{featured.summary}</p>
-          <p className="mt-3 text-sm text-green">
-            {formatUsd(featured.impactMonthly)}/mo · Continue workflow →
-          </p>
-        </Link>
-      ) : null}
+      <DecisionQueue />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {dash.kpis.map((kpi) => (
@@ -113,6 +100,8 @@ export default function ExecutivePage() {
           </div>
         ))}
       </div>
+
+      <TeamSpendCue />
 
       <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="glass-app rounded-2xl p-5">

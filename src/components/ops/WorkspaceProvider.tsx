@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  clearWorkspaceSession,
   clearWorkspaceStorage,
   exportWorkspaceJson,
   getDefaultWorkspace,
   importWorkspaceJson,
+  loadWorkspaceFromSession,
   loadWorkspaceFromStorage,
+  saveWorkspaceToSession,
   saveWorkspaceToStorage,
 } from "@/lib/ops/storage";
 import { cloneWorkspace, type WorkspaceData } from "@/lib/ops/workspace";
@@ -23,11 +26,11 @@ type WorkspaceContextValue = {
   workspace: WorkspaceData;
   hydrated: boolean;
   dirty: boolean;
-  /** True only for admin sessions — clients are read-only. */
+  /** True only for admin sessions — clients are read-only for Data Studio, but can apply demo decisions. */
   canEdit: boolean;
   setWorkspace: (next: WorkspaceData) => void;
   updateWorkspace: (updater: (prev: WorkspaceData) => WorkspaceData) => void;
-  /** Apply updater and persist to localStorage in one step. */
+  /** Apply updater and persist (localStorage for admin, sessionStorage for demo clients). */
   updateAndSave: (updater: (prev: WorkspaceData) => WorkspaceData) => void;
   save: () => void;
   reset: () => void;
@@ -58,7 +61,8 @@ export function WorkspaceProvider({
           setWorkspaceState(stored);
         }
       } else {
-        setWorkspaceState(getDefaultWorkspace());
+        const session = loadWorkspaceFromSession();
+        setWorkspaceState(session ?? getDefaultWorkspace());
       }
       setHydrated(true);
     });
@@ -66,6 +70,17 @@ export function WorkspaceProvider({
       cancelled = true;
     };
   }, [canEdit]);
+
+  const persist = useCallback(
+    (next: WorkspaceData) => {
+      if (canEdit) {
+        saveWorkspaceToStorage(next);
+      } else {
+        saveWorkspaceToSession(next);
+      }
+    },
+    [canEdit],
+  );
 
   const setWorkspace = useCallback(
     (next: WorkspaceData) => {
@@ -76,28 +91,28 @@ export function WorkspaceProvider({
     [canEdit],
   );
 
-  const updateWorkspace = useCallback(
-    (updater: (prev: WorkspaceData) => WorkspaceData) => {
-      if (!canEdit) return;
-      setWorkspaceState((prev) => {
+  const updateWorkspace = useCallback((updater: (prev: WorkspaceData) => WorkspaceData) => {
+    setWorkspaceState((prev) => {
+      const next = cloneWorkspace(updater(prev));
+      if (canEdit) {
         setDirty(true);
-        return cloneWorkspace(updater(prev));
-      });
-    },
-    [canEdit],
-  );
+      } else {
+        saveWorkspaceToSession(next);
+      }
+      return next;
+    });
+  }, [canEdit]);
 
   const updateAndSave = useCallback(
     (updater: (prev: WorkspaceData) => WorkspaceData) => {
-      if (!canEdit) return;
       setWorkspaceState((prev) => {
         const next = cloneWorkspace(updater(prev));
-        saveWorkspaceToStorage(next);
+        persist(next);
         setDirty(false);
         return next;
       });
     },
-    [canEdit],
+    [persist],
   );
 
   const save = useCallback(() => {
@@ -107,8 +122,11 @@ export function WorkspaceProvider({
   }, [canEdit, workspace]);
 
   const reset = useCallback(() => {
-    if (!canEdit) return;
-    clearWorkspaceStorage();
+    if (canEdit) {
+      clearWorkspaceStorage();
+    } else {
+      clearWorkspaceSession();
+    }
     setWorkspaceState(getDefaultWorkspace());
     setDirty(false);
   }, [canEdit]);
