@@ -36,6 +36,8 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
   const [ownerOverride, setOwnerOverride] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [boundId, setBoundId] = useState(investigationId);
+  const [spikeActive, setSpikeActive] = useState<number | null>(null);
+  const [trackActive, setTrackActive] = useState<string | null>(null);
 
   // Reset local draft when navigating to a different investigation (React-recommended render adjust).
   if (boundId !== investigationId) {
@@ -43,6 +45,8 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
     setOwnerOverride(null);
     setStep("summary");
     setStatusMsg(null);
+    setSpikeActive(null);
+    setTrackActive(null);
   }
 
   const inv = useMemo(
@@ -196,9 +200,27 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
               </p>
               <figure>
                 <figcaption className="mb-2 text-xs text-muted">
-                  Daily Support GPT-4o spend ($k) — sample
+                  Daily Support GPT-4o spend ($k) — sample · click a day to select
                 </figcaption>
-                <Sparkline series={inv.spikeSeries} className="h-28 w-full" fill />
+                <Sparkline
+                  series={inv.spikeSeries}
+                  className="h-36 w-full"
+                  fill
+                  seriesLabel="Spike spend"
+                  unitSuffix="k"
+                  activeIndex={spikeActive}
+                  onActiveChange={setSpikeActive}
+                  onPointClick={(_p, index) => setSpikeActive(index)}
+                  ariaLabel="Daily Support GPT-4o spend spike. Use arrow keys or click to select a day."
+                />
+                {spikeActive != null && inv.spikeSeries[spikeActive] ? (
+                  <p className="mt-3 text-sm text-cyan" role="status">
+                    Selected: {inv.spikeSeries[spikeActive].label} · $
+                    {inv.spikeSeries[spikeActive].value}k
+                  </p>
+                ) : (
+                  <p className="mt-3 text-xs text-muted">Hover or click a point to inspect a day</p>
+                )}
               </figure>
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Spike series by day</caption>
@@ -213,10 +235,21 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
                   </tr>
                 </thead>
                 <tbody>
-                  {inv.spikeSeries.map((p) => (
-                    <tr key={p.label} className="border-t border-border/70">
+                  {inv.spikeSeries.map((p, i) => (
+                    <tr
+                      key={p.label}
+                      className={`border-t border-border/70 ${
+                        spikeActive === i ? "bg-cyan/10" : ""
+                      }`}
+                    >
                       <th scope="row" className="py-2 font-medium text-white">
-                        {p.label}
+                        <button
+                          type="button"
+                          className="text-left hover:text-cyan"
+                          onClick={() => setSpikeActive(i)}
+                        >
+                          {p.label}
+                        </button>
                       </th>
                       <td className="py-2 text-muted">{p.value}</td>
                     </tr>
@@ -351,8 +384,27 @@ export function InvestigationCanvas({ investigationId }: { investigationId: stri
                 <DualSeriesChart
                   current={inv.tracking.seriesExpected}
                   optimized={inv.tracking.seriesObserved}
-                  className="h-40 w-full"
+                  className="h-48 w-full"
+                  currentLabel="Expected"
+                  optimizedLabel="Observed"
+                  unitSuffix="k"
+                  valueFormat={(n) => n.toFixed(2)}
+                  onPointClick={(_i, point) =>
+                    setTrackActive(
+                      `${point.label}: expected ${point.current.toFixed(2)}k · observed ${point.optimized.toFixed(2)}k · gap ${(point.current - point.optimized).toFixed(2)}k`,
+                    )
+                  }
+                  ariaLabel="Expected versus observed savings. Click a month to compare."
                 />
+                {trackActive ? (
+                  <p className="text-sm text-cyan" role="status">
+                    {trackActive}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted">
+                    Hover for expected vs observed · click to pin the comparison
+                  </p>
+                )}
                 <AuditList events={inv.auditTrail} />
               </div>
             )

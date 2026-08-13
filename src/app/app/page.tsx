@@ -8,6 +8,7 @@ import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
 import { buildExecutive, FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const PERSONA_KEY = "mirotech.persona";
@@ -52,7 +53,9 @@ function readPersona(): Persona {
 
 export default function ExecutivePage() {
   const { workspace, hydrated } = useWorkspace();
+  const router = useRouter();
   const [persona] = useState<Persona>(readPersona);
+  const [spendActive, setSpendActive] = useState<number | null>(null);
 
   if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
   const dash = buildExecutive(workspace);
@@ -105,20 +108,48 @@ export default function ExecutivePage() {
 
       <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="glass-app rounded-2xl p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm uppercase tracking-[0.16em] text-muted">
               Tech spend trend ($k)
             </h2>
-            <span className="text-xs text-muted">6 months · sample</span>
+            <Link href="/app/expenses" className="text-xs text-cyan hover:underline">
+              Open expenses →
+            </Link>
           </div>
-          <Sparkline series={dash.spendTrend} className="mt-4 h-28 w-full" fill />
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-            {dash.spendTrend.map((p) => (
-              <span key={p.label} className="rounded-full border border-border px-2 py-1">
+          <Sparkline
+            series={dash.spendTrend}
+            className="mt-4 h-36 w-full"
+            fill
+            seriesLabel="Tech spend"
+            unitSuffix="k"
+            activeIndex={spendActive}
+            onActiveChange={setSpendActive}
+            onPointClick={() => router.push("/app/expenses")}
+            ariaLabel="Tech spend trend in thousands of dollars. Click a point to open expenses."
+          />
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            {dash.spendTrend.map((p, i) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => {
+                  setSpendActive(i);
+                  router.push("/app/expenses");
+                }}
+                onMouseEnter={() => setSpendActive(i)}
+                className={`rounded-full border px-2 py-1 transition-colors ${
+                  spendActive === i
+                    ? "border-cyan/60 bg-cyan/10 text-white"
+                    : "border-border text-muted hover:border-cyan/40 hover:text-white"
+                }`}
+              >
                 {p.label} {p.value}
-              </span>
+              </button>
             ))}
           </div>
+          <p className="mt-2 text-[11px] text-muted">
+            Hover to inspect · click a month to open expenses
+          </p>
         </div>
         <div className="glass-app rounded-2xl p-5">
           <h2 className="text-sm uppercase tracking-[0.16em] text-muted">Risk notes</h2>

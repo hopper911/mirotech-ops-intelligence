@@ -2,7 +2,7 @@
 
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 type TeamRollup = {
   team: string;
@@ -33,6 +33,7 @@ function buildTeamRollups(
 
 export function TeamSpendCue() {
   const { workspace } = useWorkspace();
+  const [hovered, setHovered] = useState<string | null>(null);
 
   const { teams, openCount, openSavings, overBudget } = useMemo(() => {
     const rollups = buildTeamRollups(workspace.vendors);
@@ -55,6 +56,10 @@ export function TeamSpendCue() {
 
   const leadOver = overBudget[0];
 
+  function teamHref(team: string) {
+    return team === "Platform" ? "#decision-rightsizing" : "#needs-decision";
+  }
+
   return (
     <section aria-labelledby="team-spend-heading">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -66,14 +71,11 @@ export function TeamSpendCue() {
             Team spend
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Spend vs budget by team · sample rollup
+            Spend vs budget by team · click a team to decide
           </p>
         </div>
         {openCount > 0 ? (
-          <a
-            href="#needs-decision"
-            className="text-sm text-green hover:underline"
-          >
+          <a href="#needs-decision" className="text-sm text-green hover:underline">
             {openCount} open optimization{openCount === 1 ? "" : "s"} ·{" "}
             {formatUsd(openSavings)}/mo →
           </a>
@@ -84,9 +86,24 @@ export function TeamSpendCue() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {teams.map((t) => {
             const over = t.variance > 0;
-            const pct = t.budget > 0 ? Math.min(100, Math.round((t.spend / t.budget) * 100)) : 0;
+            const pct = t.budget > 0 ? Math.round((t.spend / t.budget) * 100) : 0;
+            const barPct = Math.min(100, pct);
+            const isHover = hovered === t.team;
+
             return (
-              <div key={t.team} className="rounded-xl border border-border/60 p-3">
+              <a
+                key={t.team}
+                href={teamHref(t.team)}
+                className={`relative block rounded-xl border p-3 transition-colors ${
+                  isHover
+                    ? "border-cyan/50 bg-cyan/5"
+                    : "border-border/60 hover:border-cyan/35"
+                }`}
+                onMouseEnter={() => setHovered(t.team)}
+                onMouseLeave={() => setHovered(null)}
+                onFocus={() => setHovered(t.team)}
+                onBlur={() => setHovered(null)}
+              >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-sm font-medium text-white">{t.team}</span>
                   <span className={`text-xs ${over ? "text-cyan" : "text-muted"}`}>
@@ -99,13 +116,45 @@ export function TeamSpendCue() {
                 <div className="mt-1 text-xs text-muted">
                   of {formatUsd(t.budget)} budget · {pct}%
                 </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"
+                  role="meter"
+                  aria-label={`${t.team} spend versus budget`}
+                  aria-valuemin={0}
+                  aria-valuemax={t.budget}
+                  aria-valuenow={t.spend}
+                  aria-valuetext={`${formatUsd(t.spend)} of ${formatUsd(t.budget)} (${pct}%)`}
+                >
                   <div
-                    className={`h-full rounded-full ${over ? "bg-cyan" : "bg-green"}`}
-                    style={{ width: `${Math.min(100, pct)}%` }}
+                    className={`h-full rounded-full transition-all ${over ? "bg-cyan" : "bg-green"}`}
+                    style={{ width: `${barPct}%` }}
                   />
                 </div>
-              </div>
+
+                {isHover ? (
+                  <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-[min(100%,14rem)] -translate-x-1/2 rounded-lg border border-white/15 bg-navy/95 px-2.5 py-1.5 text-xs shadow-lg backdrop-blur-sm">
+                    <div className="flex justify-between gap-3 text-muted">
+                      <span>Spend</span>
+                      <span className="tabular-nums text-white">{formatUsd(t.spend)}</span>
+                    </div>
+                    <div className="mt-0.5 flex justify-between gap-3 text-muted">
+                      <span>Budget</span>
+                      <span className="tabular-nums text-white">{formatUsd(t.budget)}</span>
+                    </div>
+                    <div
+                      className={`mt-0.5 flex justify-between gap-3 border-t border-white/10 pt-0.5 ${
+                        over ? "text-cyan" : "text-green"
+                      }`}
+                    >
+                      <span>Variance</span>
+                      <span className="tabular-nums">
+                        {over ? "+" : ""}
+                        {formatUsd(t.variance)}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </a>
             );
           })}
         </div>

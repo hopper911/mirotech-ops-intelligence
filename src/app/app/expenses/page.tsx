@@ -4,9 +4,15 @@ import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { Sparkline } from "@/components/app/Sparkline";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
+import { Fragment, useState } from "react";
 
 export default function ExpensesPage() {
   const { workspace, hydrated } = useWorkspace();
+  const [selected, setSelected] = useState<{
+    vendorId: string;
+    index: number;
+  } | null>(null);
+
   if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
 
   const vendors = workspace.vendors;
@@ -21,7 +27,7 @@ export default function ExpensesPage() {
           <p className="brand-sub text-[10px] text-cyan">Cloud + software</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Expenses</h1>
           <p className="mt-2 text-sm text-muted">
-            Cost trends, vendors, teams, and budget variance.
+            Cost trends, vendors, teams, and budget variance. Click a trend point for detail.
           </p>
         </div>
         <SampleDataBadge />
@@ -58,18 +64,78 @@ export default function ExpensesPage() {
             </tr>
           </thead>
           <tbody>
-            {vendors.map((v) => (
-              <tr key={v.id} className="border-t border-border/80">
-                <td className="px-4 py-3 font-medium text-white">{v.vendor}</td>
-                <td className="px-4 py-3 text-muted">{v.category}</td>
-                <td className="px-4 py-3 text-muted">{v.team}</td>
-                <td className="px-4 py-3">{formatUsd(v.monthly)}</td>
-                <td className="px-4 py-3 text-muted">{formatUsd(v.budget)}</td>
-                <td className="w-36 px-4 py-3">
-                  <Sparkline series={v.trend} className="h-8 w-28" />
-                </td>
-              </tr>
-            ))}
+            {vendors.map((v) => {
+              const isOpen = selected?.vendorId === v.id;
+              const point =
+                isOpen && selected ? v.trend[selected.index] : null;
+              const pointUsd = point ? point.value * 1000 : null;
+              const vsBudget =
+                pointUsd != null ? pointUsd - v.budget : null;
+
+              return (
+                <Fragment key={v.id}>
+                  <tr className="border-t border-border/80">
+                    <td className="px-4 py-3 font-medium text-white">{v.vendor}</td>
+                    <td className="px-4 py-3 text-muted">{v.category}</td>
+                    <td className="px-4 py-3 text-muted">{v.team}</td>
+                    <td className="px-4 py-3">{formatUsd(v.monthly)}</td>
+                    <td className="px-4 py-3 text-muted">{formatUsd(v.budget)}</td>
+                    <td className="w-40 px-4 py-3">
+                      <Sparkline
+                        series={v.trend}
+                        className="h-10 w-32"
+                        compact
+                        seriesLabel={v.vendor}
+                        unitSuffix="k"
+                        activeIndex={isOpen ? selected.index : undefined}
+                        onPointClick={(_p, index) =>
+                          setSelected((prev) =>
+                            prev?.vendorId === v.id && prev.index === index
+                              ? null
+                              : { vendorId: v.id, index },
+                          )
+                        }
+                        ariaLabel={`${v.vendor} spend trend. Click a month for detail.`}
+                      />
+                    </td>
+                  </tr>
+                  {isOpen && point ? (
+                    <tr className="border-t border-cyan/20 bg-cyan/5">
+                      <td colSpan={6} className="px-4 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                          <p className="text-muted">
+                            <span className="text-white">{v.vendor}</span>
+                            {" · "}
+                            <span className="text-cyan">{point.label}</span>
+                            {" · "}
+                            <span className="tabular-nums text-white">
+                              {formatUsd(point.value * 1000)}
+                            </span>
+                            {" sample run-rate"}
+                            {vsBudget != null ? (
+                              <>
+                                {" · "}
+                                <span className={vsBudget > 0 ? "text-cyan" : "text-green"}>
+                                  {vsBudget > 0 ? "+" : ""}
+                                  {formatUsd(vsBudget)} vs monthly budget
+                                </span>
+                              </>
+                            ) : null}
+                          </p>
+                          <button
+                            type="button"
+                            className="text-xs text-cyan hover:underline"
+                            onClick={() => setSelected(null)}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>

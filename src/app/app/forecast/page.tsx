@@ -5,9 +5,11 @@ import { SampleDataBadge } from "@/components/app/SampleDataBadge";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ForecastPage() {
   const { workspace, hydrated } = useWorkspace();
+  const router = useRouter();
   if (!hydrated) return <p className="text-sm text-muted">Loading workspace…</p>;
 
   const forecast = workspace.forecast;
@@ -48,18 +50,24 @@ export default function ForecastPage() {
       </div>
 
       <div className="glass-app rounded-2xl p-5">
-        <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
-          <span className="inline-flex items-center gap-2">
-            <span className="h-0.5 w-6 border-t-2 border-dashed border-muted" /> Current
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="h-0.5 w-6 bg-green" /> Optimized
-          </span>
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted">
+            Hover for monthly gap · click to approve open optimizations
+          </p>
+          <Link href="/app#needs-decision" className="text-xs text-green hover:underline">
+            Decision queue →
+          </Link>
         </div>
         <DualSeriesChart
           current={forecast.current.series}
           optimized={forecast.optimized.series}
-          className="mt-4 h-44 w-full"
+          className="mt-2 h-52 w-full"
+          currentLabel="Current"
+          optimizedLabel="Optimized"
+          unitSuffix="k"
+          valueFormat={(n) => n.toFixed(1)}
+          onPointClick={() => router.push("/app#needs-decision")}
+          ariaLabel="Current versus optimized spend forecast. Click to open the decision queue."
         />
       </div>
 
@@ -79,8 +87,18 @@ export default function ForecastPage() {
           <ul className="mt-4 space-y-3">
             {recs.map((r) => (
               <li key={r.id}>
-                <Link href={`/app/recommendations/${r.id}`} className="text-sm text-cyan hover:underline">
-                  {r.title} · {formatUsd(r.savingsMonthly)}/mo
+                <Link
+                  href={
+                    r.id === "rec-ai-routing"
+                      ? "/app/investigations/inv-ai-gpt4o-spike"
+                      : `/app/recommendations/${r.id}`
+                  }
+                  className="text-sm text-white hover:text-cyan"
+                >
+                  {r.title}
+                  <span className="ml-2 text-green">
+                    {formatUsd(r.savingsMonthly)}/mo
+                  </span>
                 </Link>
               </li>
             ))}
