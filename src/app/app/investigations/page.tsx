@@ -1,6 +1,7 @@
 "use client";
 
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import { formatUsd } from "@/lib/format";
@@ -16,23 +17,25 @@ export default function InvestigationsIndexPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="brand-sub text-[10px] text-cyan">Investigations</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Anomaly workflows</h1>
-          <p className="mt-2 text-sm text-muted">
-            Signature investigation: spike → cause → recommendation → approval → tracking.
-          </p>
-        </div>
-        <SampleDataBadge />
-      </header>
+      <Reveal>
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="brand-sub text-[10px] text-cyan">Investigations</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">Anomaly workflows</h1>
+            <p className="mt-2 text-sm text-muted">
+              Signature investigation: spike → cause → recommendation → approval → tracking.
+            </p>
+          </div>
+          <SampleDataBadge />
+        </header>
+      </Reveal>
 
       {list.length === 0 ? (
         <p className="text-sm text-muted">No investigations in workspace.</p>
       ) : (
-        <ul className="space-y-3">
+        <RevealStagger className="space-y-3" stagger={0.08}>
           {list.map((inv) => (
-            <li key={inv.id}>
+            <RevealItem key={inv.id}>
               <Link
                 href={`/app/investigations/${inv.id}`}
                 className="glass-app glass-lift block rounded-2xl p-5"
@@ -53,9 +56,9 @@ export default function InvestigationsIndexPage() {
                   {formatUsd(inv.impactMonthly)}/mo potential
                 </p>
               </Link>
-            </li>
+            </RevealItem>
           ))}
-        </ul>
+        </RevealStagger>
       )}
     </div>
   );

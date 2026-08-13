@@ -2,6 +2,7 @@
 
 import { DualSeriesChart } from "@/components/app/Sparkline";
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { Reveal, RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
 import Link from "next/link";
@@ -17,61 +18,71 @@ export default function ForecastPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="brand-sub text-[10px] text-cyan">Savings forecast</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">
-            Current vs optimized
-          </h1>
-          <p className="mt-2 text-sm text-muted">{forecast.confidenceNote}</p>
-        </div>
-        <SampleDataBadge />
-      </header>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="glass-app rounded-2xl p-4">
-          <div className="text-xs text-muted">{forecast.current.label}</div>
-          <div className="mt-1 text-2xl font-semibold text-white">
-            {formatUsd(forecast.current.monthlySpend)}/mo
+      <Reveal>
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="brand-sub text-[10px] text-cyan">Savings forecast</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">
+              Current vs optimized
+            </h1>
+            <p className="mt-2 text-sm text-muted">{forecast.confidenceNote}</p>
           </div>
-        </div>
-        <div className="glass-app rounded-2xl p-4">
-          <div className="text-xs text-muted">{forecast.optimized.label}</div>
-          <div className="mt-1 text-2xl font-semibold text-green">
-            {formatUsd(forecast.optimized.monthlySpend)}/mo
-          </div>
-        </div>
-        <div className="glass-app rounded-2xl p-4">
-          <div className="text-xs text-muted">Annual savings (sample)</div>
-          <div className="mt-1 text-2xl font-semibold text-green">
-            {formatUsd(forecast.annualSavings)}
-          </div>
-        </div>
-      </div>
+          <SampleDataBadge />
+        </header>
+      </Reveal>
 
-      <div className="glass-app rounded-2xl p-5">
-        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-muted">
-            Hover for monthly gap · click to approve open optimizations
-          </p>
-          <Link href="/app#needs-decision" className="text-xs text-green hover:underline">
-            Decision queue →
-          </Link>
-        </div>
-        <DualSeriesChart
-          current={forecast.current.series}
-          optimized={forecast.optimized.series}
-          className="mt-2 h-52 w-full"
-          currentLabel="Current"
-          optimizedLabel="Optimized"
-          unitSuffix="k"
-          valueFormat={(n) => n.toFixed(1)}
-          onPointClick={() => router.push("/app#needs-decision")}
-          ariaLabel="Current versus optimized spend forecast. Click to open the decision queue."
-        />
-      </div>
+      <RevealStagger className="grid gap-3 sm:grid-cols-3" stagger={0.07}>
+        <RevealItem>
+          <div className="glass-app h-full rounded-2xl p-4">
+            <div className="text-xs text-muted">{forecast.current.label}</div>
+            <div className="mt-1 text-2xl font-semibold text-white">
+              {formatUsd(forecast.current.monthlySpend)}/mo
+            </div>
+          </div>
+        </RevealItem>
+        <RevealItem>
+          <div className="glass-app h-full rounded-2xl p-4">
+            <div className="text-xs text-muted">{forecast.optimized.label}</div>
+            <div className="mt-1 text-2xl font-semibold text-green">
+              {formatUsd(forecast.optimized.monthlySpend)}/mo
+            </div>
+          </div>
+        </RevealItem>
+        <RevealItem>
+          <div className="glass-app h-full rounded-2xl p-4">
+            <div className="text-xs text-muted">Annual savings (sample)</div>
+            <div className="mt-1 text-2xl font-semibold text-green">
+              {formatUsd(forecast.annualSavings)}
+            </div>
+          </div>
+        </RevealItem>
+      </RevealStagger>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <Reveal delay={0.08}>
+        <div className="glass-app glass-lift rounded-2xl p-5">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-muted">
+              Hover for monthly gap · click to approve open optimizations
+            </p>
+            <Link href="/app#needs-decision" className="text-xs text-green hover:underline">
+              Decision queue →
+            </Link>
+          </div>
+          <DualSeriesChart
+            current={forecast.current.series}
+            optimized={forecast.optimized.series}
+            className="mt-2 h-52 w-full"
+            currentLabel="Current"
+            optimizedLabel="Optimized"
+            unitSuffix="k"
+            valueFormat={(n) => n.toFixed(1)}
+            onPointClick={() => router.push("/app#needs-decision")}
+            ariaLabel="Current versus optimized spend forecast. Click to open the decision queue."
+          />
+        </div>
+      </Reveal>
+
+      <Reveal delay={0.1} className="grid gap-4 lg:grid-cols-2">
         <div className="glass-app rounded-2xl p-5">
           <h2 className="text-sm uppercase tracking-[0.14em] text-muted">Assumptions</h2>
           <ul className="mt-4 space-y-2 text-sm text-muted">
@@ -104,7 +115,7 @@ export default function ForecastPage() {
             ))}
           </ul>
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }

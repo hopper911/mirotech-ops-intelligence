@@ -1,5 +1,6 @@
 "use client";
 
+import { RevealItem, RevealStagger } from "@/components/motion/Reveal";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { formatUsd } from "@/lib/format";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/lib/ops/decisions";
 import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import type { Investigation, Recommendation } from "@/lib/ops";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -73,7 +75,6 @@ function buildQueue(
       };
     });
 
-  // Rightsizing first among recs, then by savings desc; investigations stay at top for the signature story.
   const sortedRecs = [...recItems].sort((a, b) => {
     if (a.kind === "rightsizing" && b.kind !== "rightsizing") return -1;
     if (b.kind === "rightsizing" && a.kind !== "rightsizing") return 1;
@@ -86,6 +87,7 @@ function buildQueue(
 export function DecisionQueue() {
   const { workspace, updateAndSave, canEdit } = useWorkspace();
   const [flash, setFlash] = useState<string | null>(null);
+  const reduce = useReducedMotion();
 
   const items = useMemo(
     () => buildQueue(workspace.investigations ?? [], workspace.recommendations),
@@ -141,11 +143,21 @@ export function DecisionQueue() {
         </div>
       </div>
 
-      {flash ? (
-        <p className="mb-3 text-sm text-green" role="status">
-          {flash}
-        </p>
-      ) : null}
+      <AnimatePresence mode="wait">
+        {flash ? (
+          <motion.p
+            key={flash}
+            role="status"
+            className="mb-3 text-sm text-green"
+            initial={reduce ? false : { opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduce ? undefined : { opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {flash}
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
 
       {items.length === 0 ? (
         <div className="glass-app rounded-2xl p-5 text-sm text-muted">
@@ -156,52 +168,53 @@ export function DecisionQueue() {
           to see the optimized path.
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <RevealStagger className="flex flex-col gap-3" stagger={0.06}>
           {items.map((item) => (
-            <li
-              key={item.key}
-              id={item.kind === "rightsizing" ? "decision-rightsizing" : undefined}
-              className={`glass-app rounded-2xl p-4 sm:p-5 ${
-                item.kind === "rightsizing" ? "border border-green/35" : ""
-              }`}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-[0.14em] text-cyan">
-                    {decisionKindLabel(item.kind)} · {item.risk} risk
+            <RevealItem key={item.key}>
+              <div
+                id={item.kind === "rightsizing" ? "decision-rightsizing" : undefined}
+                className={`glass-app glass-lift rounded-2xl p-4 sm:p-5 ${
+                  item.kind === "rightsizing" ? "border border-green/35" : ""
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-[0.14em] text-cyan">
+                      {decisionKindLabel(item.kind)} · {item.risk} risk
+                    </div>
+                    <h3 className="mt-1.5 font-semibold text-white">{item.title}</h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-muted">{item.blurb}</p>
+                    <p className="mt-2 text-sm text-green">
+                      {formatUsd(item.savingsMonthly)}/mo potential
+                    </p>
                   </div>
-                  <h3 className="mt-1.5 font-semibold text-white">{item.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted">{item.blurb}</p>
-                  <p className="mt-2 text-sm text-green">
-                    {formatUsd(item.savingsMonthly)}/mo potential
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => approveItem(item)}
-                    className="btn-specular rounded-full bg-green px-4 py-2 text-sm font-semibold text-navy"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => dismissItem(item)}
-                    className="btn-ghost-glass rounded-full px-4 py-2 text-sm text-white"
-                  >
-                    Dismiss
-                  </button>
-                  <Link
-                    href={item.reviewHref}
-                    className="rounded-full px-3 py-2 text-sm text-cyan hover:underline"
-                  >
-                    Review
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => approveItem(item)}
+                      className="btn-specular rounded-full bg-green px-4 py-2 text-sm font-semibold text-navy"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => dismissItem(item)}
+                      className="btn-ghost-glass rounded-full px-4 py-2 text-sm text-white"
+                    >
+                      Dismiss
+                    </button>
+                    <Link
+                      href={item.reviewHref}
+                      className="rounded-full px-3 py-2 text-sm text-cyan hover:underline"
+                    >
+                      Review
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </li>
+            </RevealItem>
           ))}
-        </ul>
+        </RevealStagger>
       )}
     </section>
   );

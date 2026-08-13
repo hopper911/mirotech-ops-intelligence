@@ -77,6 +77,30 @@ body {
   background-size: auto, auto, auto, 48px 48px, 48px 48px;
 }
 
+/* Slow ambient wash — app shell only */
+.theme-app.grid-atmosphere::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: -20% -10%;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 50% 40% at 70% 20%, rgba(34, 211, 238, 0.12), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 20% 80%, rgba(125, 220, 101, 0.07), transparent 50%);
+  animation: atmosphere-drift 28s ease-in-out infinite alternate;
+}
+
+@keyframes atmosphere-drift {
+  0% {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0.95;
+    transform: translate3d(-2%, 1.5%, 0) scale(1.04);
+  }
+}
+
 .grid-atmosphere::after {
   content: "";
   pointer-events: none;
@@ -290,9 +314,13 @@ body {
   .node-rail-pulse {
     animation: none !important;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
+  .theme-app.grid-atmosphere::before {
+    animation: none !important;
+    opacity: 0.7;
+    transform: none;
+  }
+
   .glass-lift,
   .btn-specular,
   .btn-ghost-glass,
@@ -313,4 +341,39 @@ body {
   .animate-fade-up {
     animation: none !important;
   }
+}
+
+/* —— Media protection (deterrence layer; not DRM) —— */
+img,
+video,
+picture {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.media-protect {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* Do NOT set position here — wrappers use Tailwind absolute/relative intentionally */
+}
+
+.media-protect-asset {
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none;
+}
+
+/* When a shield overlay is present, route pointer events to the shield */
+.media-protect:has(.media-protect-shield) .media-protect-asset {
+  pointer-events: none;
+}
+
+.media-protect-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: default;
+  background: transparent;
 }

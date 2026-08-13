@@ -1,6 +1,7 @@
 "use client";
 
 import { SampleDataBadge } from "@/components/app/SampleDataBadge";
+import { Reveal } from "@/components/motion/Reveal";
 import { useWorkspace } from "@/components/ops/WorkspaceProvider";
 import { FEATURED_INVESTIGATION_ID } from "@/lib/ops";
 import { formatUsd } from "@/lib/format";
@@ -16,29 +17,33 @@ export default function AiUsagePage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="brand-sub text-[10px] text-cyan">AI API usage</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Models & anomalies</h1>
-          <p className="mt-2 text-sm text-muted">
-            Usage, model costs, teams, and anomaly signals.
-          </p>
-        </div>
-        <SampleDataBadge />
-      </header>
+      <Reveal>
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="brand-sub text-[10px] text-cyan">AI API usage</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">Models & anomalies</h1>
+            <p className="mt-2 text-sm text-muted">
+              Usage, model costs, teams, and anomaly signals.
+            </p>
+          </div>
+          <SampleDataBadge />
+        </header>
+      </Reveal>
 
-      <div className="rounded-2xl border border-cyan/30 bg-cyan/5 p-4">
-        <div className="text-xs uppercase tracking-[0.14em] text-cyan">Anomalies</div>
-        <ul className="mt-2 space-y-1 text-sm text-foreground/90">
-          {anomalies.length ? anomalies.map((a) => <li key={a}>• {a}</li>) : <li>• None</li>}
-        </ul>
-        <Link
-          href={`/app/investigations/${FEATURED_INVESTIGATION_ID}`}
-          className="mt-3 inline-block text-sm text-green hover:underline"
-        >
-          Open GPT-4o investigation workflow →
-        </Link>
-      </div>
+      <Reveal delay={0.06}>
+        <div className="glass-app glass-lift rounded-2xl border border-cyan/30 bg-cyan/5 p-4">
+          <div className="text-xs uppercase tracking-[0.14em] text-cyan">Anomalies</div>
+          <ul className="mt-2 space-y-1 text-sm text-foreground/90">
+            {anomalies.length ? anomalies.map((a) => <li key={a}>• {a}</li>) : <li>• None</li>}
+          </ul>
+          <Link
+            href={`/app/investigations/${FEATURED_INVESTIGATION_ID}`}
+            className="btn-specular mt-3 inline-block rounded-full bg-green px-4 py-2 text-sm font-semibold text-navy"
+          >
+            Open GPT-4o investigation workflow →
+          </Link>
+        </div>
+      </Reveal>
 
       <div className="text-sm text-muted">
         Total AI spend this month:{" "}
