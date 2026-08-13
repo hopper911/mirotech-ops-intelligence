@@ -84,7 +84,7 @@ export function MarketingFooter() {
 
 export function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="theme-app grid-atmosphere flex min-h-screen flex-col">
+    <div className="theme-app grid-atmosphere flex min-h-dvh flex-1 flex-col">
       <MarketingHeader />
       <PageTransition className="flex-1">{children}</PageTransition>
       <MarketingFooter />

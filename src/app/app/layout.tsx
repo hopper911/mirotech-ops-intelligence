@@ -18,7 +18,7 @@ export default async function AppLayout({
 
   return (
     <AppProviders canEdit={isAdmin}>
-      <div className="theme-app grid-atmosphere flex min-h-screen">
+      <div className="theme-app grid-atmosphere relative flex min-h-dvh flex-1">
         <AppAmbientChrome />
         <aside className="glass-nav sticky top-0 z-10 hidden h-screen w-64 shrink-0 flex-col border-r border-white/10 md:flex">
           <div className="border-b border-white/10 px-4 py-5">

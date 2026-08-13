@@ -6,11 +6,12 @@
   --cyan: #22d3ee;
   --green: #7ddc65;
   --surface: #f5f7fa;
-  --background: var(--surface);
-  --foreground: var(--navy);
-  --muted: #5b6b82;
-  --card: #ffffff;
-  --border: #d8e0ea;
+  /* Site is dark-first — light body was flashing as a white strip under shells */
+  --background: var(--navy);
+  --foreground: #f5f7fa;
+  --muted: #8fa0b8;
+  --card: #122033;
+  --border: #1e3048;
   --ring: var(--blue);
   --glass-bg: rgba(18, 32, 51, 0.45);
   --glass-bg-strong: rgba(10, 22, 40, 0.72);
@@ -45,12 +46,20 @@
   --border: #1e3048;
   color: var(--foreground);
   background: var(--background);
+  min-height: 100dvh;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* App shell is navy — keep html/body matching so overflow never flashes light surface */
+html:has(.theme-app),
+html:has(.theme-app) body {
+  background: var(--navy);
+  color: #f5f7fa;
 }
 
 .brand-display {
@@ -67,6 +76,7 @@ body {
 .grid-atmosphere {
   position: relative;
   isolation: isolate;
+  overflow-x: clip;
   background-color: var(--navy);
   background-image:
     radial-gradient(ellipse 90% 55% at 50% -18%, rgba(37, 99, 235, 0.42), transparent 55%),
@@ -77,12 +87,12 @@ body {
   background-size: auto, auto, auto, 48px 48px, 48px 48px;
 }
 
-/* Slow ambient wash — app shell only */
+/* Slow ambient wash — opacity only (no scale/negative inset → no extra scroll height) */
 .theme-app.grid-atmosphere::before {
   content: "";
   pointer-events: none;
   position: absolute;
-  inset: -20% -10%;
+  inset: 0;
   z-index: 0;
   background:
     radial-gradient(ellipse 50% 40% at 70% 20%, rgba(34, 211, 238, 0.12), transparent 55%),
@@ -92,12 +102,10 @@ body {
 
 @keyframes atmosphere-drift {
   0% {
-    opacity: 0.55;
-    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.45;
   }
   100% {
-    opacity: 0.95;
-    transform: translate3d(-2%, 1.5%, 0) scale(1.04);
+    opacity: 0.9;
   }
 }
 
@@ -318,7 +326,6 @@ body {
   .theme-app.grid-atmosphere::before {
     animation: none !important;
     opacity: 0.7;
-    transform: none;
   }
 
   .glass-lift,

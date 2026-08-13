@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { MediaProtection } from "@/components/security/MediaProtection";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
@@ -38,10 +39,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full bg-navy antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>{children}</AuthProvider>
+      <body className="min-h-dvh flex flex-col bg-navy font-sans text-foreground">
+        <AuthProvider>
+          <MediaProtection>{children}</MediaProtection>
+        </AuthProvider>
       </body>
     </html>
   );
